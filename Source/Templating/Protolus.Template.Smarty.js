@@ -15,11 +15,11 @@ provides: [Midas.Smarty]
 */
 Protolus.Template.Smarty = new Class({
     Extends : Protolus.Template,
-    initialize: function(){
-        this.parent({
+    initialize: function(text){
+        this.parent(text, {
             strict : true,
             opener : '{',
-            closer : '{',
+            closer : '}',
             attributeAssign : '=',
             attributeDelimiters : ['"', "'"],
             closeEscape : '/',
@@ -34,5 +34,14 @@ Protolus.Template.Smarty = new Class({
                 }
             }
         });
+        this.tagRegistry.register('test', function(node){
+            return 'this is a test';
+        });
     },
+    render: function(){
+        
+    }
 });
+Protolus.Template.Smarty.scan = function(){
+    Protolus.Template.scan('smarty', Protolus.Template.Smarty);
+};

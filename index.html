@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <title>Protolus RAD Framework</title>
+        <script type="text/javascript" src="Lib/Client/MooTools.js"></script>
+        <script type="text/javascript" src="Lib/Client/MooTools-More.js"></script>
+        <script type="text/javascript" src="Build/Protolus.client.js"></script>
+        <style name="awesomeo" type="protolus/smarty">
+            <li>{test}{/test}</li>
+        </style>
+        <script>
+            //Protolus.createClient();
+            document.addEvent('domready', function(){
+                Protolus.Template.Smarty.scan();
+                Protolus.Template.render('awesomeo', {}, function(text){
+                    console.log(['rendered', text]);
+                })
+            });
+        </script>
+    </head>
+    <body>
+        <h1>What does this thing do?</h1>
+    </body>
+</html>

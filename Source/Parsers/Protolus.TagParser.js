@@ -13,7 +13,6 @@ requires:
 provides: [Midas.XMLParser]
 ...
 */
-if(!Protolus) var Protolus = {};
 Protolus.TagParser = new Class({ //my ultra-slim tag parser
     strict : true,
     opener : '<',
@@ -28,21 +27,22 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
     initialize: function(options){
         Object.each(options, function(option, name){
             this[name] = option;
-        });
-        if(typeOf(this.literalTags) == 'string') this.literalTags = this.literalTags.split(',')
-        if(typeOf(this.attributeDelimiters) == 'string') this.attributeDelimiters = this.attributeDelimiters.split(',')
+        }.bind(this));
+        if(typeOf(this.literalTags) == 'string') this.literalTags = this.literalTags.split(',');
+        if(typeOf(this.attributeDelimiters) == 'string') this.attributeDelimiters = this.attributeDelimiters.split(',');
+        console.log(['this', this]);
     },
-    open: function(tagName, attributes){
-        sys.puts('open:'+tagName.toLowerCase());
+    open: function(tag){
+        console.log('open:'+tag.name);
     },
     content: function(text){
-        sys.puts('con:'+text);
+        console.log('con:'+text);
     },
-    close: function(tagName){
-        sys.puts('close:'+tagName.toLowerCase());
+    close: function(tag){
+        console.log('close:'+tag.name);
     },
     error: function(exception){
-        sys.puts(exception);
+        console.log(exception);
     },
     parse: function(xmlChars){
         var tagOpen = false;
@@ -53,11 +53,14 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
         var literalMode = false;
         var strictError = 'Strict parse error: Unmatched Tag!';
         for(var lcv = 0; lcv < xmlChars.length; lcv++){
-            ch = String.fromCharCode(xmlChars[lcv]);
+            ch = xmlChars[lcv];
+            console.log(['char', ch]);
             if(tagOpen){
                 if(ch == this.closer){
+                    console.log('closer');
                     var tag = this.parseTag(currentTag);
                     if(tag.name[0] == this.closeEscape){
+                        console.log('close closing tag');
                         tag.name = tag.name.substring(1);
                         this.close(tag);
                         var lastTag = tagStack.pop();
@@ -67,6 +70,7 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
                         }
                         literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
                     }else{
+                        console.log('close opening tag');
                         this.open(tag);
                         tagStack.push(tag);
                         literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
@@ -82,13 +86,16 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
                     }
                     tagOpen = false;
                 }else currentTag += ch;
+                console.log('tag char');
             }else{
                 if(!literalMode && ch == this.opener){
+                    console.log('found open');
                     currentTag = '';
                     tagOpen = true;
                     if(content.trim() != '') this.content(content.trim());
                     content = '';
                 }else content += ch;
+                console.log('ch++');
             }
         }
         if(content.trim() != '') this.content(content.trim());

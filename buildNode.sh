@@ -14,7 +14,7 @@ echo "var GLOBAL_ITEMS = function(){
 " > $filename
 moduleList=$1
 if [$moduleList -eq '']; then
-moduleList="Source/Node/Request.extensions,Source/Node/Element.extensions,Source/Extensions/Array.extensions,Source/Extensions/Element.extensions,Source/Extensions/NodeList.extensions,Source/Extensions/Function.extensions,Source/Extensions/Number.extensions,Source/Extensions/Object.extensions,Source/Extensions/Request.Pool,Source/Extensions/Request.Stable,Source/Extensions/String.extensions,Source/Protolus.js,Source/Protolus.Template.js,Source/Protolus.Registry.js,Source/Parsers/Protolus.TagParser.js,Source/Parsers/Protolus.HTMLParser.js,Source/Templating/Protolus.Template.Smarty.js"
+moduleList="Source/Node/Request.extensions,Source/Node/Element.extensions,Source/Extensions/Array.extensions,Source/Extensions/Element.extensions,Source/Extensions/NodeList.extensions,Source/Extensions/Function.extensions,Source/Extensions/Number.extensions,Source/Extensions/Object.extensions,Source/Extensions/Request.Pool,Source/Extensions/Request.Stable,Source/Extensions/String.extensions,Source/Protolus,Source/Protolus.Registry,Source/Parsers/Protolus.TagParser,Source/Protolus.Template,Source/Protolus.Registry,Source/Parsers/Protolus.HTMLParser,Source/Templating/Protolus.Template.Smarty"
 fi 
 echo "(function(){" >> $filename
 old_IFS=${IFS}
@@ -23,7 +23,7 @@ for v in $moduleList; do
     cat "$dr/$v.js" >>$filename
 done
 IFS=${old_IFS}
-echo "this.Midas = Midas; })();" >> $filename
+echo "this.Protolus = Protolus; })();" >> $filename
 echo "if (typeof exports != 'undefined') (function(){
     for (var key in this) if (!GLOBAL_ITEMS.contains(key)){
         exports[key] = this[key];

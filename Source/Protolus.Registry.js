@@ -1,6 +1,6 @@
 /*
 ---
-description: An extensible Smarty Parser in Mootools
+description: A simple registry wrapper for binding objects to an id, textually
 
 license: MIT-style
 
@@ -10,17 +10,16 @@ authors:
 requires:
     core/1.2.4: '*'
 
-provides: [Midas.Smarty]
+provides: [Protolus.Registry]
 ...
 */
-if(!Protolus) var Protolus = {};
 Protolus.Registry = new Class({
     registry : {},
-    initilize : function(name){
+    initialize : function(name){
     
     },
-    register : function(key, template){
-        
+    register : function(key, value){
+        this.registry[key] = value;
     },
     get : function(key){
         return this.registry[key];

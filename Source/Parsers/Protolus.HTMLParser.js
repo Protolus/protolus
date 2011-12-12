@@ -15,7 +15,7 @@ provides: [Midas.XMLParser]
 */
 if(!Protolus) var Protolus = {};
 Protolus.HTMLParser = new Class({
-    Extends : Midas.TagParser,
+    Extends : Protolus.TagParser,
     root : null,
     nodeStack : [],
     initialize: function(){

@@ -14,7 +14,7 @@ echo "var GLOBAL_ITEMS = function(){
 " > $filename
 moduleList=$1
 if [$moduleList -eq '']; then
-moduleList="Source/Extensions/Array.extensions,Source/Extensions/Element.extensions,Source/Extensions/NodeList.extensions,Source/Extensions/Function.extensions,Source/Extensions/Number.extensions,Source/Extensions/Object.extensions,Source/Extensions/Request.Pool,Source/Extensions/Request.Stable,Source/Extensions/String.extensions,Source/Protolus.js,Source/Protolus.Template.js,Source/Protolus.Registry.js,Source/Parsers/Protolus.TagParser.js,Source/Parsers/Protolus.HTMLParser.js,Source/Templating/Protolus.Template.Smarty.js"
+moduleList="Source/Extensions/Array.extensions,Source/Extensions/Element.extensions,Source/Extensions/NodeList.extensions,Source/Extensions/Function.extensions,Source/Extensions/Number.extensions,Source/Extensions/Object.extensions,Source/Extensions/Request.Pool,Source/Extensions/Request.Stable,Source/Extensions/String.extensions,Source/Protolus,Source/Protolus.Registry,Source/Parsers/Protolus.TagParser,Source/Protolus.Template,Source/Parsers/Protolus.HTMLParser,Source/Templating/Protolus.Template.Smarty"
 fi 
 old_IFS=${IFS}
 IFS=","
