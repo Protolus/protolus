@@ -17,8 +17,8 @@ Protolus.Image.Filter.Emboss = new Class({
         return 'emboss';
     },
     filter: function(pixels, controls){
-        if(controls.type == 'a') return ImageBooth.convolve(pixels, this.emboss_a_matrix, controls.amount, controls.threshold);
-        if(controls.type == 'b') return ImageBooth.convolve(pixels, this.emboss_b_matrix, controls.amount, controls.threshold);
+        if(controls.type == 'a') return Protolus.Image.Booth.convolve(pixels, this.emboss_a_matrix, controls.amount, controls.threshold);
+        if(controls.type == 'b') return Protolus.Image.Booth.convolve(pixels, this.emboss_b_matrix, controls.amount, controls.threshold);
         return pixels;
     },
     getControls : function(){

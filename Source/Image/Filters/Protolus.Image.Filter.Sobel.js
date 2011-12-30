@@ -30,16 +30,16 @@ Protolus.Image.Filter.Sobel = new Class({
         var result;
         switch(controls.direction){
             case 'east' :
-                result =  ImageBooth.convolve(pixels, this.sobel_gx_matrix, controls.amount, controls.threshold);
+                result =  Protolus.Image.Booth.convolve(pixels, this.sobel_gx_matrix, controls.amount, controls.threshold);
                 break;
             case 'west' :
-                result =  ImageBooth.convolve(pixels, this.sobel_gx2_matrix, controls.amount, controls.threshold);
+                result =  Protolus.Image.Booth.convolve(pixels, this.sobel_gx2_matrix, controls.amount, controls.threshold);
                 break;
             case 'north' :
-                result =  ImageBooth.convolve(pixels, this.sobel_gy_matrix, controls.amount, controls.threshold);
+                result =  Protolus.Image.Booth.convolve(pixels, this.sobel_gy_matrix, controls.amount, controls.threshold);
                 break;
             case 'south' :
-                result =  ImageBooth.convolve(pixels, this.sobel_gy2_matrix, controls.amount, controls.threshold);
+                result =  Protolus.Image.Booth.convolve(pixels, this.sobel_gy2_matrix, controls.amount, controls.threshold);
                 break;
             default:
                 result = pixels;

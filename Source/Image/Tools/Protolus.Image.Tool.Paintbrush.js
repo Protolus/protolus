@@ -10,7 +10,7 @@ Protolus.Image.Tool.Paintbrush = new Class({
         // turn it into a ratio
         if(transparency != 0) transparency =  (transparency) / 255.0;
         if(opaquness != 0) opaquness = ( opaquness) / 255.0;
-        var color = ImageBooth.decodeHex(ImageBooth.foreground);
+        var color = Protolus.Image.Booth.decodeHex(Protolus.Image.Booth.foreground);
         var brush = brush;
         //reset X/Y for the brush size
         var sx = pixels.width;

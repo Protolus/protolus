@@ -1,4 +1,4 @@
-Protolus.Image.Filter.LaplacianFilter = new Class({
+Protolus.Image.Filter.Laplacian = new Class({
     Extends : Protolus.Image.Filter,
     laplacian_matrix : [
         [   0.0, -1.0, 0.0  ],
@@ -17,9 +17,9 @@ Protolus.Image.Filter.LaplacianFilter = new Class({
         return 'Gradient Detector';
     },
     filter: function(pixels, controls){
-        var resultA = ImageBooth.performConvolution(pixels, this.laplacian_matrix, 2);
-        var resultB = ImageBooth.performConvolution(pixels, this.laplacian_matrix2, 2);
-        return ImageBooth.merge(resultA, resultB, 'lighten');
+        var resultA = Protolus.Image.Booth.performConvolution(pixels, this.laplacian_matrix, 2);
+        var resultB = Protolus.Image.Booth.performConvolution(pixels, this.laplacian_matrix2, 2);
+        return Protolus.Image.Booth.merge(resultA, resultB, 'lighten');
     },
     getControls : function(){
         return [];

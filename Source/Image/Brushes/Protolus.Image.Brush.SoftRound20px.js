@@ -1,4 +1,4 @@
-Protolus.Image.Brush.20pxSoftRoundBrush = new Class({
+Protolus.Image.Brush.SoftRound20px = new Class({
     Extends : Protolus.Image.Brush,
     name : function(){
         return '20px_soft_round';

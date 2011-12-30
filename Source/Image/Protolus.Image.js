@@ -57,7 +57,7 @@ Protolus.Image = new Class({
         this.layers.each(function(layer){
             if(layer.show){
                 if(result != null){
-                    result = ImageBooth.merge(layer.pixels, result, context);
+                    result = Protolus.Image.Booth.merge(layer.pixels, result, context);
                 }else{
                     result = layer.pixels;
                 }

@@ -12,7 +12,7 @@ Protolus.Image.Filter.Sharpen = new Class({
         return 'sharpen';
     },
     filter: function(pixels, controls){
-        return ImageBooth.convolve(pixels, this.sharpenMatrix(controls.k), controls.amount, controls.threshold);;
+        return Protolus.Image.Booth.convolve(pixels, this.sharpenMatrix(controls.k), controls.amount, controls.threshold);;
     },
     getControls : function(){
         return {

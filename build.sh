@@ -1,5 +1,7 @@
 #!/bin/sh
 
+#node,extensions,core,image
+
 #init
 dr=`pwd`
 name=$2
@@ -45,7 +47,7 @@ if (typeof exports != 'undefined') (function(){
             fileList=$fileList"Extensions/Array.extensions,Extensions/Element.extensions,Extensions/NodeList.extensions,Extensions/Function.extensions,Extensions/Number.extensions,Extensions/Object.extensions,Extensions/Request.Pool,Extensions/Request.Stable,Extensions/String.extensions,"
         ;;
         image)
-            fileList=$fileList"Image/Protolus.Image.Booth,Image/Protolus.Image,Image/Protolus.Image.Layer,Image/Protolus.Image.Filter,Image/Protolus.Image.Tool,Image/Protolus.Image.Brush,Image/Protolus.Image.Operation,Image/Brushes/Protolus.Image.Brush.10pxScatter,Image/Brushes/Protolus.Image.Brush.3pxRound,Image/Brushes/Protolus.Image.Brush.10pxSoftRound,Image/Brushes/Protolus.Image.Brush.40pxSoftRound,Image/Brushes/Protolus.Image.Brush.15pxSoftRound,Image/Brushes/Protolus.Image.Brush.5pxRound,Image/Brushes/Protolus.Image.Brush.1pxSquare,Image/Brushes/Protolus.Image.Brush.5pxSoftRound,Image/Brushes/Protolus.Image.Brush.20pxSoftRound,Image/Brushes/Protolus.Image.Brush.5pxSquare,Image/Filters/Protolus.Image.Filter.Emboss,Image/Filters/Protolus.Image.Filter.Laplacian,Image/Filters/Protolus.Image.Filter.GaussianBlur,Image/Filters/Protolus.Image.Filter.Sharpen,Image/Filters/Protolus.Image.Filter.HighPass,Image/Filters/Protolus.Image.Filter.Sobel,Image/Tools/Protolus.Image.Tool.Clone,Image/Tools/Protolus.Image.Tool.Paintbrush,Image/Tools/Protolus.Image.Tool.Eraser,Image/Tools/Protolus.Image.Tool.Paintbucket,Image/Tools/Protolus.Image.Tool.Eyedropper,Image/Operations/Protolus.Image.Operation.BrightnessContrast,Image/Operations/Protolus.Image.Operation.Negative,"
+            fileList=$fileList"Image/Protolus.Image,Image/Protolus.Image.Booth,Image/Protolus.Image.Layer,Image/Protolus.Image.Filter,Image/Protolus.Image.Tool,Image/Protolus.Image.Brush,Image/Protolus.Image.Operation,Image/Brushes/Protolus.Image.Brush.Scatter10px,Image/Brushes/Protolus.Image.Brush.Round3px,Image/Brushes/Protolus.Image.Brush.SoftRound10px,Image/Brushes/Protolus.Image.Brush.SoftRound40px,Image/Brushes/Protolus.Image.Brush.SoftRound15px,Image/Brushes/Protolus.Image.Brush.Round5px,Image/Brushes/Protolus.Image.Brush.Square1px,Image/Brushes/Protolus.Image.Brush.SoftRound5px,Image/Brushes/Protolus.Image.Brush.SoftRound20px,Image/Brushes/Protolus.Image.Brush.Square5px,Image/Filters/Protolus.Image.Filter.Emboss,Image/Filters/Protolus.Image.Filter.Laplacian,Image/Filters/Protolus.Image.Filter.GaussianBlur,Image/Filters/Protolus.Image.Filter.Sharpen,Image/Filters/Protolus.Image.Filter.HighPass,Image/Filters/Protolus.Image.Filter.Sobel,Image/Tools/Protolus.Image.Tool.Clone,Image/Tools/Protolus.Image.Tool.Paintbrush,Image/Tools/Protolus.Image.Tool.Eraser,Image/Tools/Protolus.Image.Tool.Paintbucket,Image/Tools/Protolus.Image.Tool.Eyedropper,Image/Operations/Protolus.Image.Operation.BrightnessContrast,Image/Operations/Protolus.Image.Operation.Negative,"
         ;;
         game)
             fileList=$fileList""

@@ -7,13 +7,13 @@ Protolus.Image.Tool.Clone = new Class({
     oldPoint : null,
     paint: function(brush, pixels, x, y){
         //TODO: figure out why this will not stay set without using this static to store it's state
-        this.clonePoint = ImageBooth.clonePosition;
-        this.oldPoint = ImageBooth.cloneBrushPosition;
+        this.clonePoint = Protolus.Image.Booth.clonePosition;
+        this.oldPoint = Protolus.Image.Booth.cloneBrushPosition;
         if(KeyboardHandler.isKeyPressed('alt')){
                 this.clonePoint = {x:x, y:y};
                 this.oldPoint = null;
-                ImageBooth.clonePosition = this.clonePoint;
-                ImageBooth.cloneBrushPosition = this.oldPoint;
+                Protolus.Image.Booth.clonePosition = this.clonePoint;
+                Protolus.Image.Booth.cloneBrushPosition = this.oldPoint;
                 return pixels;
             }
         if(this.clonePoint == null || this.clonePoint == undefined){
@@ -30,14 +30,14 @@ Protolus.Image.Tool.Clone = new Class({
         }else{
             this.oldPoint = {x:x, y:y};
         }
-        ImageBooth.clonePosition = this.clonePoint;
-        ImageBooth.cloneBrushPosition = this.oldPoint;
+        Protolus.Image.Booth.clonePosition = this.clonePoint;
+        Protolus.Image.Booth.cloneBrushPosition = this.oldPoint;
         var transparency = 0;
         var opaquness = 255 - transparency;
         // turn it into a ratio
         if(transparency != 0) transparency =  (transparency) / 255.0;
         if(opaquness != 0) opaquness = ( opaquness) / 255.0;
-        var color = ImageBooth.decodeHex(ImageBooth.background);
+        var color = Protolus.Image.Booth.decodeHex(Protolus.Image.Booth.background);
         var brush = brush;
         //reset X/Y for the brush size
         var sx = pixels.width;

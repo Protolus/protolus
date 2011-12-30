@@ -6,4 +6,8 @@ require('Protolus.node').apply(GLOBAL);
 require('AsciiArt').apply(GLOBAL);
 
 Protolus.createServer();
-
+Protolus.Image.Booth.startup();
+var image = new Protolus.Image();
+img = new Image;
+img.src = 'test.jpg';
+image.newLayer(img);

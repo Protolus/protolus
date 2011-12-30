@@ -7,11 +7,11 @@ Protolus.Image.Operation.BightnessContrast = new Class({
         return 'Brightness/Contrast';
     },
     operate: function(pixels, controls){
-        ImageBooth.convolveBuffer.setProperty('width', pixels.width);
-        ImageBooth.convolveBuffer.setProperty('height', pixels.height);
+        Protolus.Image.Booth.convolveBuffer.setProperty('width', pixels.width);
+        Protolus.Image.Booth.convolveBuffer.setProperty('height', pixels.height);
         controls.contrast = (controls.contrast+150)/150;
         //controls.brightness = (controls.brightness+150)/150;
-        var context = ImageBooth.convolveBuffer.getContext('2d');
+        var context = Protolus.Image.Booth.convolveBuffer.getContext('2d');
         var newPixels  = context.getImageData(0,0, pixels.width, pixels.height);
         var sx = pixels.width; //getx
         var sy = pixels.height; //gety

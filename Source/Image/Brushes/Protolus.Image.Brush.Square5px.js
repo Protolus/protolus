@@ -1,4 +1,4 @@
-Protolus.Image.Brush.5pxSquare = new Class({
+Protolus.Image.Brush.Square5px = new Class({
     Extends : Protolus.Image.Brush,
     name : function(){
         return '5px_square';

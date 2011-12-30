@@ -9,7 +9,7 @@ Protolus.Image.Tool.Paintbucket = new Class({
         var hits = [];
         if(sourceColor == null){
             sourceColor = [pixels.data[pos], pixels.data[pos+1], pixels.data[pos+2]];
-            foreground = hex2rgb(ImageBooth.foreground);
+            foreground = hex2rgb(Protolus.Image.Booth.foreground);
         }
         var stack = [];
         stack.push([x, y, 'left']);

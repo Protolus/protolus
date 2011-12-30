@@ -86,6 +86,14 @@ Object.expand(object, {
 
 //*/
 
+if(!Object.propify){
+    Object.propify = function(obj, property){
+         obj[property].toString = function(){
+            this();
+         }
+    }
+}
+
 
 if(!Object.expand){
     Object.expand = function(ob, fields, indices){ 

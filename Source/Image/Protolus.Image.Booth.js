@@ -15,7 +15,7 @@ Protolus.Image.Booth = {
     cloneBrushPosition : null,
     // init
     startup: function(){
-        Bootstrap.initialize(
+        /*Bootstrap.initialize(
             [
                 {
                     name : 'MooTools',
@@ -88,40 +88,40 @@ Protolus.Image.Booth = {
                 this.load('tools', 'Paintbucket');
                 
             }.bind(this)
-        );
-        /*if(ImageBooth.filters.length == 0){
-            ImageBooth.registerFilter(new ImBo_Gaussian_Blur_Filter());
-            ImageBooth.registerFilter(new ImBo_Sobel_Filter());
-            ImageBooth.registerFilter(new ImBo_Laplacian_Filter());
-            ImageBooth.registerFilter(new ImBo_Sharpen_Filter());
-            ImageBooth.registerFilter(new ImBo_Emboss_Filter());
-            ImageBooth.registerFilter(new ImBo_High_Pass_Filter());
+        );*/
+        if(Protolus.Image.Booth.filters.length == 0){
+            Protolus.Image.Booth.registerFilter(new Protolus.Image.Filter.GaussianBlur());
+            Protolus.Image.Booth.registerFilter(new Protolus.Image.Filter.Sobel());
+            Protolus.Image.Booth.registerFilter(new Protolus.Image.Filter.Laplacian());
+            Protolus.Image.Booth.registerFilter(new Protolus.Image.Filter.Sharpen());
+            Protolus.Image.Booth.registerFilter(new Protolus.Image.Filter.Emboss());
+            Protolus.Image.Booth.registerFilter(new Protolus.Image.Filter.HighPass());
             
-            ImageBooth.registerOperation(new ImBo_Negative());
-            ImageBooth.registerOperation(new ImBo_BightnessContrast());
+            Protolus.Image.Booth.registerOperation(new Protolus.Image.Operation.Negative());
+            Protolus.Image.Booth.registerOperation(new Protolus.Image.Operation.BightnessContrast());
             
-            ImageBooth.registerBrush(new ImBo_1px_Square_Brush());
-            ImageBooth.registerBrush(new ImBo_3px_Round_Brush());
-            ImageBooth.registerBrush(new ImBo_5px_Square_Brush());
-            ImageBooth.registerBrush(new ImBo_5px_Round_Brush());
-            ImageBooth.registerBrush(new ImBo_5px_Soft_Round_Brush());
-            ImageBooth.registerBrush(new ImBo_10px_Scatter_Brush());
-            ImageBooth.registerBrush(new ImBo_10px_Soft_Round_Brush());
-            ImageBooth.registerBrush(new ImBo_15px_Soft_Round_Brush());
-            ImageBooth.registerBrush(new ImBo_20px_Soft_Round_Brush());
-            ImageBooth.registerBrush(new ImBo_40px_Soft_Round_Brush());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.Square1px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.Round3px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.Square5px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.Round5px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.SoftRound5px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.Scatter10px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.SoftRound10px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.SoftRound15px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.SoftRound20px());
+            Protolus.Image.Booth.registerBrush(new Protolus.Image.Brush.SoftRound40px());
             
-            ImageBooth.registerTool(new ImBo_Paintbrush());
-            ImageBooth.registerTool(new ImBo_Eraser());
-            ImageBooth.registerTool(new ImBo_Clone());
-            ImageBooth.registerTool(new ImBo_Eyedropper());
-            ImageBooth.registerTool(new ImBo_Paintbucket());
-        }*/
+            Protolus.Image.Booth.registerTool(new Protolus.Image.Tool.Paintbrush());
+            Protolus.Image.Booth.registerTool(new Protolus.Image.Tool.Eraser());
+            Protolus.Image.Booth.registerTool(new Protolus.Image.Tool.Clone());
+            Protolus.Image.Booth.registerTool(new Protolus.Image.Tool.Eyedropper());
+            Protolus.Image.Booth.registerTool(new Protolus.Image.Tool.Paintbucket());
+        }
     },
     load : function(type, name){
         var id = type[0].toUpperCase()+type.substring(1).toLowerCase()+'/'+name+'.js';
         Bootstrap.JS(id);
-    }
+    },
     log : function(value){
         if(console) {
             if(navigator.userAgent.toLowerCase().indexOf("applewebkit") != -1) {
@@ -136,83 +136,83 @@ Protolus.Image.Booth = {
     },
     //registration
     registerFilter: function(filter){
-        ImageBooth.filters[filter.name()] = filter;
+        Protolus.Image.Booth.filters[filter.name()] = filter;
     },
     registerOperation: function(operation){
-        ImageBooth.operations[operation.name()] = operation;
+        Protolus.Image.Booth.operations[operation.name()] = operation;
     },
     registerTransformation: function(transformation){
-        ImageBooth.transformations[transformation.name()] = transformation;
+        Protolus.Image.Booth.transformations[transformation.name()] = transformation;
     },
     registerBrush: function(brush){
-        if(ImageBooth.currentBrush == null) ImageBooth.currentBrush = brush.name();
-        ImageBooth.brushes[brush.name()] = brush;
+        if(Protolus.Image.Booth.currentBrush == null) Protolus.Image.Booth.currentBrush = brush.name();
+        Protolus.Image.Booth.brushes[brush.name()] = brush;
     },
     registerTool: function(tool){
-        if(ImageBooth.currentTool == null) ImageBooth.currentTool = tool.name();
-        ImageBooth.tools[tool.name()] = tool;
+        if(Protolus.Image.Booth.currentTool == null) Protolus.Image.Booth.currentTool = tool.name();
+        Protolus.Image.Booth.tools[tool.name()] = tool;
     },
     //core
     newImage : function(img){
         var img = new ImBo_Image(document.id('body'));
-        ImageBooth.currentImage = img;
+        Protolus.Image.Booth.currentImage = img;
         return img;
     },
     filter : function(name, layer, controls){
-        ImageBooth.checkInitialization();
+        Protolus.Image.Booth.checkInitialization();
         if(!controls && this.gui){
-            var controls = ImageBooth.filters[name].getControls();
+            var controls = Protolus.Image.Booth.filters[name].getControls();
             var count = 0;
             for(controlKey in controls) count++;
             if(count == 0){
-                if(ImageBooth.filters[name] != null) return ImageBooth.filters[name].filter(layer.pixels, controls);
+                if(Protolus.Image.Booth.filters[name] != null) return Protolus.Image.Booth.filters[name].filter(layer.pixels, controls);
                 return;
             }
             if(this.gui) this.gui.makeOptionsWindow(name, controls, layer, this.filter);
         }else{
             var target = layer;
             if (target.layer_signature) target = target.pixels;
-            if(ImageBooth.filters[name] != null) return ImageBooth.filters[name].filter(target, controls);
-            else ImageBooth.error('OMG no filter! '+name);
+            if(Protolus.Image.Booth.filters[name] != null) return Protolus.Image.Booth.filters[name].filter(target, controls);
+            else Protolus.Image.Booth.error('OMG no filter! '+name);
         }
     },
     transform : function(name, layer, controls){
-        ImageBooth.checkInitialization();
-        if(ImageBooth.transformations[name] != null) return ImageBooth.transformations[name].transform(layer, controls);
-        else ImageBooth.error('OMG no transformation! '+name);
+        Protolus.Image.Booth.checkInitialization();
+        if(Protolus.Image.Booth.transformations[name] != null) return Protolus.Image.Booth.transformations[name].transform(layer, controls);
+        else Protolus.Image.Booth.error('OMG no transformation! '+name);
     },
     operate : function(name, layer, controls){
-        ImageBooth.checkInitialization();
+        Protolus.Image.Booth.checkInitialization();
         if(!controls && this.gui){
-            var controls = ImageBooth.operations[name].getControls();
+            var controls = Protolus.Image.Booth.operations[name].getControls();
             var count = 0;
             for(controlKey in controls) count++;
             if(count == 0){
-                if(ImageBooth.operations[name] != null) return ImageBooth.operations[name].operate(layer.pixels, controls);
+                if(Protolus.Image.Booth.operations[name] != null) return Protolus.Image.Booth.operations[name].operate(layer.pixels, controls);
                 return;
             }
             if(this.gui) this.gui.makeOptionsWindow(name, controls, layer, this.operate);
         }else{
             var target = layer;
             if (target.layer_signature) target = target.pixels;
-            if(ImageBooth.operations[name] != null) return ImageBooth.operations[name].operate(target, controls);
-            else ImageBooth.error('OMG no filter! '+name);
+            if(Protolus.Image.Booth.operations[name] != null) return Protolus.Image.Booth.operations[name].operate(target, controls);
+            else Protolus.Image.Booth.error('OMG no filter! '+name);
         }
     },
     brush : function(name, layer, x, y, controls){
-        ImageBooth.checkInitialization();
-        if(ImageBooth.brushes[name] != 'undefined'){
-            if(ImageBooth.brushes[name].getBrush == undefined) ImageBooth.error('no brush! '+name);
-            else if(ImageBooth.currentTool == null || ImageBooth.tools[ImageBooth.currentTool].paint == undefined) ImageBooth.error('no tool ! '+ImageBooth.currentTool);
-            else return ImageBooth.tools[ImageBooth.currentTool].paint(ImageBooth.brushes[name].getBrush(), layer, x, y);
+        Protolus.Image.Booth.checkInitialization();
+        if(Protolus.Image.Booth.brushes[name] != 'undefined'){
+            if(Protolus.Image.Booth.brushes[name].getBrush == undefined) Protolus.Image.Booth.error('no brush! '+name);
+            else if(Protolus.Image.Booth.currentTool == null || Protolus.Image.Booth.tools[Protolus.Image.Booth.currentTool].paint == undefined) Protolus.Image.Booth.error('no tool ! '+Protolus.Image.Booth.currentTool);
+            else return Protolus.Image.Booth.tools[Protolus.Image.Booth.currentTool].paint(Protolus.Image.Booth.brushes[name].getBrush(), layer, x, y);
         }
-        else ImageBooth.error('OMG no brush! '+name);
+        else Protolus.Image.Booth.error('OMG no brush! '+name);
     },
     // Utility functions
     brushDimensions: function(name){
-        ImageBooth.checkInitialization();
-        if(ImageBooth.brushes[name] != 'undefined'){
-            return {x:ImageBooth.brushes[name].brush.length, y:ImageBooth.brushes[name].brush[0].length};
+        Protolus.Image.Booth.checkInitialization();
+        if(Protolus.Image.Booth.brushes[name] != 'undefined'){
+            return {x:Protolus.Image.Booth.brushes[name].brush.length, y:Protolus.Image.Booth.brushes[name].brush[0].length};
         }
         else return {x:0, y:0};
     },
@@ -226,11 +226,11 @@ Protolus.Image.Booth = {
     },
     performConvolution : function(pixels, convolution_matrix, levels){
         if(levels == undefined) levels = convolution_matrix.length * convolution_matrix[0].length;
-        return ImageBooth.convolve(pixels, convolution_matrix, levels, 0);
+        return Protolus.Image.Booth.convolve(pixels, convolution_matrix, levels, 0);
         
     },
     error : function(message){
-        ImageBooth.log(message);
+        Protolus.Image.Booth.log(message);
     },
     flipY : function(matrix){
         var temp;
@@ -258,12 +258,12 @@ Protolus.Image.Booth = {
     convolveBuffer : new Element('canvas'),
     convolve: function(pixels, filter, filter_div, offset){ //src == image
         if (pixels == null){
-            ImageBooth.error('Tried to convolve nothing!');
+            Protolus.Image.Booth.error('Tried to convolve nothing!');
         }
         //setup buffer
-        ImageBooth.convolveBuffer.setProperty('width', pixels.width);
-        ImageBooth.convolveBuffer.setProperty('height', pixels.height);
-        var context = ImageBooth.convolveBuffer.getContext('2d');
+        Protolus.Image.Booth.convolveBuffer.setProperty('width', pixels.width);
+        Protolus.Image.Booth.convolveBuffer.setProperty('height', pixels.height);
+        var context = Protolus.Image.Booth.convolveBuffer.getContext('2d');
         var newPixels  = context.getImageData(0,0, pixels.width, pixels.height);
         var sx = pixels.width; //getx
         var sy = pixels.height; //gety
@@ -307,19 +307,19 @@ Protolus.Image.Booth = {
     },
     merge: function(aPixels, bPixels, buffer, mode, opacity){ //src == image 
         //for clarity's sake, we are layering layer a over layer b
-        if (aPixels == null || bPixels == null) ImageBooth.error('Tried to convolve nothing!');
+        if (aPixels == null || bPixels == null) Protolus.Image.Booth.error('Tried to convolve nothing!');
         if(aPixels.height != bPixels.height || aPixels.width != bPixels.width){
-            ImageBooth.error('Mismatched pixel sizes');
-            ImageBooth.error(aPixels);
-            ImageBooth.error(bPixels);
+            Protolus.Image.Booth.error('Mismatched pixel sizes');
+            Protolus.Image.Booth.error(aPixels);
+            Protolus.Image.Booth.error(bPixels);
         }
         if(mode == null) mode = 'overlay';
         //setup buffer
         var newPixels;
         if(!buffer || buffer == null){
-            ImageBooth.convolveBuffer.setProperty('width', aPixels.width);
-            ImageBooth.convolveBuffer.setProperty('height', aPixels.height);
-            var context = ImageBooth.convolveBuffer.getContext('2d');
+            Protolus.Image.Booth.convolveBuffer.setProperty('width', aPixels.width);
+            Protolus.Image.Booth.convolveBuffer.setProperty('height', aPixels.height);
+            var context = Protolus.Image.Booth.convolveBuffer.getContext('2d');
             newPixels  = context.getImageData(0,0, aPixels.width, aPixels.height);
         }else{
             newPixels = buffer.getImageData(0,0, aPixels.width, aPixels.height);
@@ -457,4 +457,4 @@ Protolus.Image.Booth = {
         }
     }
 };
-ImageBooth.startup();
+//Protolus.Image.Booth.startup();

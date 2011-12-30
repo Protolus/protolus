@@ -35,34 +35,34 @@ Protolus.Image.Layer = new Class({
         //img.setStyle('display','none');
     },
     filter : function(name, controls){
-        var filteredPixels = ImageBooth.filter(name, this, controls);
+        var filteredPixels = Protolus.Image.Booth.filter(name, this, controls);
         if(filteredPixels) this.drawOnto(filteredPixels);
     },
     operate : function(name, controls){
-        var pixels = ImageBooth.operate(name, this, controls);
+        var pixels = Protolus.Image.Booth.operate(name, this, controls);
         if(pixels) this.drawOnto(pixels);
     },
     brush : function(name, x, y, controls){
-        var pixels = ImageBooth.brush(name, this.pixels, x, y, controls);
+        var pixels = Protolus.Image.Booth.brush(name, this.pixels, x, y, controls);
         //this.drawOnto(pixels);
         this.context2d.putImageData(pixels, 0, 0);
         this.parentImage.repaint();
     },
     hex : function(){
-        return ImageBooth.hexDump(this.pixels, this.pixels.width, this.pixels.height);
+        return Protolus.Image.Booth.hexDump(this.pixels, this.pixels.width, this.pixels.height);
     },
     png : function(){
-        return ImageBooth.imageDump(this.buffer, 'png');
+        return Protolus.Image.Booth.imageDump(this.buffer, 'png');
     },
     getIMG : function(){
-        return ImageBooth.imageObject(this.buffer);
+        return Protolus.Image.Booth.imageObject(this.buffer);
     },
     strokeLine : function(name, x, y, x2, y2, controls){
         //compute the points on a line to brush
         //var dist = Math.round(Math.sqrt( (x-x2)*(x-x2) + (y-y2)*(y-y2))); //get distance in pixels
         var xdist = Math.abs(x-x2); //get distance in pixels
         var ydist = Math.abs(y-y2);
-        var brush_size = ImageBooth.brushDimensions(name);
+        var brush_size = Protolus.Image.Booth.brushDimensions(name);
         var avg_size = 2;
         var thisx, thisy;
         var div = 2;
@@ -78,7 +78,7 @@ Protolus.Image.Layer = new Class({
                 thisx = x + (lcv*interval);
                 thisy = Math.round(y + (thisx - x) * coefficient);
                 //alert('['+thisx+', '+thisy+']');
-                pixels = ImageBooth.brush(name, pixels, thisx, thisy, controls);
+                pixels = Protolus.Image.Booth.brush(name, pixels, thisx, thisy, controls);
                 this.context2d.putImageData(pixels, 0, 0);
             }
         }else{
@@ -90,7 +90,7 @@ Protolus.Image.Layer = new Class({
                 thisy = y + (lcv*interval);
                 thisx = Math.round(x + (thisy - y) * coefficient);
                 //alert('['+thisx+', '+thisy+']');
-                pixels = ImageBooth.brush(name, pixels, thisx, thisy, controls);
+                pixels = Protolus.Image.Booth.brush(name, pixels, thisx, thisy, controls);
                 this.context2d.putImageData(pixels, 0, 0);
             }
 

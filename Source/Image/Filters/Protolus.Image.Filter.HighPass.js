@@ -1,4 +1,4 @@
-Protolus.Image.Filter.HighPassFilter = new Class({
+Protolus.Image.Filter.HighPass = new Class({
     Extends : Protolus.Image.Filter,
     getLabel : function(){
         return 'High Pass Filter';
@@ -19,8 +19,8 @@ Protolus.Image.Filter.HighPassFilter = new Class({
         return 'high_pass_filter';
     },
     filter: function(pixels, controls){
-        if(controls.type == '3x3') return ImageBooth.convolve(pixels, this.a3x3_matrix, controls.amount, controls.threshold);
-        if(controls.type == '5x5') return ImageBooth.convolve(pixels, this.a5x5_matrix, controls.amount, controls.threshold);
+        if(controls.type == '3x3') return Protolus.Image.Booth.convolve(pixels, this.a3x3_matrix, controls.amount, controls.threshold);
+        if(controls.type == '5x5') return Protolus.Image.Booth.convolve(pixels, this.a5x5_matrix, controls.amount, controls.threshold);
         return pixels;
     },
     getControls : function(){

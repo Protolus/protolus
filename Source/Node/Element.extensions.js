@@ -25,6 +25,15 @@ if(!Element){
         initialize : function(name, options){
             this.tagName = name;
             this.attributes = options;
+            if(name.toLowerCase() == 'canvas'){
+                var Canvas = require('canvas');
+                this.canvasWedge = new Canvas(150, 150);
+                Object.each(this.canvasWedge, function(value, key){
+                    if(typeOf(value) == 'function'){
+                        this[key] = value;
+                    }
+                }.bind(this));
+            }
         },
         appendChild : function(element){
             this.children.push(element);

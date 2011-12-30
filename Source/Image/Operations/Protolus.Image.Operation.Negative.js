@@ -1,4 +1,4 @@
-var Protolus.Image.Operation.Negative = new Class({
+Protolus.Image.Operation.Negative = new Class({
     Extends: Protolus.Image.Operation,
     name : function(){
         return 'negative';
@@ -7,9 +7,9 @@ var Protolus.Image.Operation.Negative = new Class({
         return 'Negative';
     },
     operate: function(pixels, controls){
-        ImageBooth.convolveBuffer.setProperty('width', pixels.width);
-        ImageBooth.convolveBuffer.setProperty('height', pixels.height);
-        var context = ImageBooth.convolveBuffer.getContext('2d');
+        Protolus.Image.Booth.convolveBuffer.setProperty('width', pixels.width);
+        Protolus.Image.Booth.convolveBuffer.setProperty('height', pixels.height);
+        var context = Protolus.Image.Booth.convolveBuffer.getContext('2d');
         var newPixels  = context.getImageData(0,0, pixels.width, pixels.height);
         var sx = pixels.width; //getx
         var sy = pixels.height; //gety

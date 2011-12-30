@@ -30,7 +30,7 @@ Protolus.Template = new Class({
     open: function(tag){
         console.log('open:'+tag.name);
         if(!this.tagRegistry[tag.name]) throw('Unkown tag('+tag.name+')');
-        this.tagStack.push(new new Protolus.Template.GenericNode(this.tagRegistry[tag.name](tag.name, tag.attributes));
+        this.tagStack.push(new new Protolus.Template.GenericNode(this.tagRegistry[tag.name](tag.name, tag.attributes)));
     },
     content: function(text){
         this.tagStack[this.tagStack.length-1].addChild(new Protolus.Template.TextNode(text));

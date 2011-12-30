@@ -54,8 +54,8 @@ Protolus.Image.Filter.GaussianBlur = new Class({
         //alert(profile(controls));
         var matrix = this.matrix(controls.radius, controls.radius);
         //alert(profile(matrix));
-        return ImageBooth.convolve(pixels, matrix, controls.amount, controls.threshold);
-        //return ImageBooth.performConvolution(pixels, matrix, controls.amount);
+        return Protolus.Image.Booth.convolve(pixels, matrix, controls.amount, controls.threshold);
+        //return Protolus.Image.Booth.performConvolution(pixels, matrix, controls.amount);
     },
     getControls : function(){
         return {
