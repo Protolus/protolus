@@ -22,21 +22,40 @@ if(!Element){
     var Element = new Class({
         children : [],
         attributes : {},
+        classes : [],
         initialize : function(name, options){
             this.tagName = name;
             this.attributes = options;
-            if(name.toLowerCase() == 'canvas'){
-                var Canvas = require('canvas');
-                this.canvasWedge = new Canvas(150, 150);
-                Object.each(this.canvasWedge, function(value, key){
-                    if(typeOf(value) == 'function'){
-                        this[key] = value;
-                    }
-                }.bind(this));
+            switch(name.toLowerCase()){
+                case 'canvas':
+                    var Canvas = require('canvas');
+                    this.canvasWedge = new Canvas();
+                    Object.each(this.canvasWedge, function(value, key){
+                        if(typeOf(value) == 'function'){
+                            this[key] = value;
+                        }
+                    }.bind(this));
+                    break;
+                case 'image':
+                    this.watch('src', function(key, value, oldValue){
+                    
+                    });
+                    break;
             }
+            //global setup
+            attributes.watch('class', function(key, value, oldValue){
+                this.classes = value.split(value);
+            });
         },
         appendChild : function(element){
             this.children.push(element);
+        },
+        getAttribute : function(key){
+            return this.attributes[key];
+        },
+        setAttribute : function(key, value){
+            if(!value) delete this.attributes[key];
+            this.attributes[key] = value;
         },
         appendText : function(text){
             this.children.push(text);
