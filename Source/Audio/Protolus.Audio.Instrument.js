@@ -15,5 +15,8 @@ provides: [Protolus.Audio.Instrument]
 */
 
 Protolus.Audio.Instrument = new Class({
-
+    filters : [],
+    addFilter : function(filter){
+        this.filters.push(filters);
+    },
 });

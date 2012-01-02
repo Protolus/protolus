@@ -15,5 +15,10 @@ provides: [Protolus.Audio.Filter]
 */
 
 Protolus.Audio.Filter = new Class({
-
+    initialize : function(options){
+        
+    },
+    filter : function(value, time){
+        throw('filter function not implemented!');
+    }
 });
