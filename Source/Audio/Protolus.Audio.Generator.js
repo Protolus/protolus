@@ -44,5 +44,18 @@ Protolus.Audio.Generator = new Class({
     },
     rawValue : function(time){
         throw('rawValue function not implemented!');
+    },
+    composite : function(values){
+        switch(this.compositeMode){
+            case 'maximum':
+                var max = false;
+                values.each(function(value){
+                    if(!max) max = value;
+                    else if(max > value) max = value;
+                });
+                return max;
+                break;
+            default: throw('unsupported composite mode('+this.compositeMode+')!');
+        }
     }
 });

@@ -14,8 +14,8 @@ provides: [Midas.Smarty]
 ...
 */
 
-Protolus.Audio.Generator = new Class({
-    Extends : Protolus.Audio.Source,
+Protolus.Audio.Generator.Sine = new Class({
+    Extends : Protolus.Audio.Generator,
     initialize : function(options){
         this.parent(options);
     },

@@ -15,8 +15,16 @@ provides: [Protolus.Audio.Instrument]
 */
 
 Protolus.Audio.Instrument = new Class({
-    filters : [],
-    addFilter : function(filter){
-        this.filters.push(filters);
+    Extends : Protolus.Audio.Generator,
+    generators : [],
+    addGenerators : function(generator){
+        this.generators.push(generator);
+    },
+    rawValue : function(time){
+        var values = [];
+        this.generators.each(function(generator){
+            values.push(generator.rawValue());
+        });
+        return this.composite(values);
     },
 });
