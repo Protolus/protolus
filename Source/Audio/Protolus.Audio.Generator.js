@@ -16,7 +16,6 @@ provides: [Protolus.Audio.Generator]
 
 Protolus.Audio.Generator = new Class({
     Extends : Protolus.Audio.Source,
-    filters : [],
     settings : {
         frequency : 1,
         rangeTop : 255,
@@ -27,9 +26,6 @@ Protolus.Audio.Generator = new Class({
         this.settings.rangeOffset = Math.cieling(this.settings.rangeSize / 2);
         this.settings.rangeOffsetDown = Math.floor(this.settings.rangeSize / 2);
         this.parent(options);
-    },
-    addFilter : function(filter){
-        this.filters.push(filters);
     },
     value : function(time){
         var value = this.settings.rangeOffset + Math.round(

@@ -17,13 +17,9 @@ provides: [Protolus.Audio.Mixer]
 Protolus.Audio.Mixer = new Class({
     Extends : Protolus.Audio.Source, //yes, a mixer can mix down other mixers
     sources : [],
-    filters : [],
     compositeMode : 'maximum',
     attach : function(source){
         sources.push(source);
-    },
-    addFilter : function(filter){
-        this.filters.push(filters);
     },
     value : function(time){
         var values = [];
