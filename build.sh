@@ -3,7 +3,7 @@
 #node,extensions,core,image
 
 #init
-dr=`pwd`
+dr="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 name=$2
 moduleList=$1
 header=""
@@ -46,8 +46,11 @@ if (typeof exports != 'undefined') (function(){
         extensions)
             fileList=$fileList"Extensions/Array.extensions,Extensions/Element.extensions,Extensions/NodeList.extensions,Extensions/Function.extensions,Extensions/Number.extensions,Extensions/Object.extensions,Extensions/Request.Pool,Extensions/Request.Stable,Extensions/String.extensions,"
         ;;
+        audio)
+            fileList=$fileList"Audio/Protolus.Audio.Source,Audio/Protolus.Audio.Filter,Audio/Protolus.Audio.Generator,Audio/Protolus.Audio.Instrument,Audio/Protolus.Audio.Mixer,Audio/Protolus.Audio.Sequencer,Audio/Generators/Protolus.Audio.Generator.Sine"
+        ;;
         image)
-            fileList=$fileList"Image/Protolus.Image,Image/Protolus.Image.Booth,Image/Protolus.Image.Layer,Image/Protolus.Image.Filter,Image/Protolus.Image.Tool,Image/Protolus.Image.Brush,Image/Protolus.Image.Operation,Image/Brushes/Protolus.Image.Brush.Scatter10px,Image/Brushes/Protolus.Image.Brush.Round3px,Image/Brushes/Protolus.Image.Brush.SoftRound10px,Image/Brushes/Protolus.Image.Brush.SoftRound40px,Image/Brushes/Protolus.Image.Brush.SoftRound15px,Image/Brushes/Protolus.Image.Brush.Round5px,Image/Brushes/Protolus.Image.Brush.Square1px,Image/Brushes/Protolus.Image.Brush.SoftRound5px,Image/Brushes/Protolus.Image.Brush.SoftRound20px,Image/Brushes/Protolus.Image.Brush.Square5px,Image/Filters/Protolus.Image.Filter.Emboss,Image/Filters/Protolus.Image.Filter.Laplacian,Image/Filters/Protolus.Image.Filter.GaussianBlur,Image/Filters/Protolus.Image.Filter.Sharpen,Image/Filters/Protolus.Image.Filter.HighPass,Image/Filters/Protolus.Image.Filter.Sobel,Image/Tools/Protolus.Image.Tool.Clone,Image/Tools/Protolus.Image.Tool.Paintbrush,Image/Tools/Protolus.Image.Tool.Eraser,Image/Tools/Protolus.Image.Tool.Paintbucket,Image/Tools/Protolus.Image.Tool.Eyedropper,Image/Operations/Protolus.Image.Operation.BrightnessContrast,Image/Operations/Protolus.Image.Operation.Negative,"
+            fileList=$fileList"Image/Protolus.Image, Image/Protolus.Image.Booth,Image/Protolus.Image.Layer,Image/Protolus.Image.Filter,Image/Protolus.Image.Tool,Image/Protolus.Image.Brush,Image/Protolus.Image.Operation,Image/Brushes/Protolus.Image.Brush.Scatter10px,Image/Brushes/Protolus.Image.Brush.Round3px,Image/Brushes/Protolus.Image.Brush.SoftRound10px,Image/Brushes/Protolus.Image.Brush.SoftRound40px,Image/Brushes/Protolus.Image.Brush.SoftRound15px,Image/Brushes/Protolus.Image.Brush.Round5px,Image/Brushes/Protolus.Image.Brush.Square1px,Image/Brushes/Protolus.Image.Brush.SoftRound5px,Image/Brushes/Protolus.Image.Brush.SoftRound20px,Image/Brushes/Protolus.Image.Brush.Square5px,Image/Filters/Protolus.Image.Filter.Emboss,Image/Filters/Protolus.Image.Filter.Laplacian,Image/Filters/Protolus.Image.Filter.GaussianBlur,Image/Filters/Protolus.Image.Filter.Sharpen,Image/Filters/Protolus.Image.Filter.HighPass,Image/Filters/Protolus.Image.Filter.Sobel,Image/Tools/Protolus.Image.Tool.Clone,Image/Tools/Protolus.Image.Tool.Paintbrush,Image/Tools/Protolus.Image.Tool.Eraser,Image/Tools/Protolus.Image.Tool.Paintbucket,Image/Tools/Protolus.Image.Tool.Eyedropper,Image/Operations/Protolus.Image.Operation.BrightnessContrast,Image/Operations/Protolus.Image.Operation.Negative,"
         ;;
         game)
             fileList=$fileList""
@@ -62,9 +65,9 @@ IFS=${old_IFS}
 #sort out the name
 name=$2
 if [$2 -eq '']; then
-    name="Protolus."$type".js"
+    name="Build/Protolus."$type".js"
 fi
-filename="Build/$name"
+filename="$name"
 
 #output to file 
 echo $header >> $filename
