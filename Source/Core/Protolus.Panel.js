@@ -18,7 +18,7 @@ provides: [Protolus.PageRenderer, Protolus.Panel, Protolus.Lib, Protolus.Logger,
 if(!Protolus) var Protolus = {};
 Protolus.Panel = new Class({
     Extends : Midas.Smarty,
-    template_location : '',
+    template_location : '/App/Panels/',
     compile_location : '',
     cache_location : '',
     root_location : '',
@@ -34,6 +34,7 @@ Protolus.Panel = new Class({
     injectID : null,
     initialize : function(name, progenitor){
         //if true, then it's a wrapper (and cannot have a progenitor)
+        //console.log(['NNN', name]);
         if(progenitor === true) this.wrapper = true;
         this.name = name;
         this.template_location = Protolus.templateLocation;

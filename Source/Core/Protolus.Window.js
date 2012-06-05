@@ -1,5 +1,175 @@
 Protolus.Window = new Class({
     Implements: Options,
+    data : {},
+    options:{
+        titlebar : false,
+        controls : false,
+        screen : false,
+        name : 'default',
+        position : 'center',
+        dimensions : {
+            x : 300,
+            y : 300
+        }
+    },
+    initialize : function(element, options){
+        this.setOptions(options);
+        this.element = document.id(element);
+        if(!this.element) this.element = new Element('div', {
+            id : element,
+            'class' : 'protolus_window'
+        });
+        this.element.inject(document.body);
+    },
+    set : function(){
+        throw('set not implemented');
+    },
+    show : function(){
+        throw('show not implemented');
+    },
+    hide : function(){
+        throw('show not implemented');
+    }
+});
+Protolus.BaseWindow = new Class({
+    Extends: Protolus.Window,
+    initialize : function(element, options){
+        this.parent(element, options);
+        this.box = new baseBox({
+            element: this.element,
+            warpClass: "protolus_window",
+            width: 300,
+            height: 100,
+            centered: (this.options.position == 'center'),
+            offsets: {
+                x: 140,
+                y: 100
+            },
+            modal: {
+                enabled: false
+            }
+        });
+        this.box.doBox('');
+        /*this.element.setStyles({
+            'position': 'fixed',
+            'top': '0px',
+            'left': '0px',
+            'right': '0px',
+            'overflow': 'hidden'
+        });*/
+    },
+    set : function(html){
+        this.box.setHTML(html);
+    },
+    show : function(){
+        this.box.showBox();
+    },
+    hide : function(){
+        this.box.closeBox();
+    }
+});
+Protolus.BaseTemplateWindow = new Class({
+    Extends: Protolus.Window,
+    initialize : function(element, options){
+        this.parent(element, options);
+        this.box = new baseBox({
+            element: this.element,
+            warpClass: "protolus_window",
+            width: 300,
+            height: 100,
+            centered: (this.options.position == 'center'),
+            offsets: {
+                x: 140,
+                y: 100
+            },
+            modal: {
+                enabled: false
+            }
+        });
+        this.box.doBox('');
+        /*this.element.setStyles({
+            'position': 'fixed',
+            'top': '0px',
+            'left': '0px',
+            'right': '0px',
+            'overflow': 'hidden'
+        });*/
+    },
+    set : function(html){
+        if(typeOf(html) == 'array'){
+            this.data = html;
+            if(this.panel){
+                this.panel.render(this.data, function(text){
+                    this.box.setHTML(text);
+                    this.element.show();
+                }.bind(this));
+            }
+        }else{  
+            console.log(['this.box', this.box]);
+            window.w = this.box;
+            this.box.setHTML(html);
+        }
+    },
+    show : function(panel){
+        if(panel){
+            this.panel = new Protolus.Panel(panel);
+            this.panel.render(this.data, function(text){
+                this.set(text);
+                this.box.showBox();
+            }.bind(this));
+        }else{
+            this.box.showBox();
+        }
+    },
+    hide : function(){
+        this.box.closeBox();
+    }
+});
+Protolus.TemplateWindow = new Class({
+    Extends: Protolus.Window,
+    initialize : function(name, options){
+        this.parent(name, options);
+        if(!this.options.directory) this.options.directory = '/App/Panels';
+    },
+    show : function(panel){
+        if(this.options.wrapper){
+            this.wrapperPanel = new Protolus.Panel(this.options.wrapper, true);
+            this.wrapperPanel.render({
+                content : ('<div class="content"></div>'),
+                name : this.options.name,
+                title : this.options.title,
+            }, function(text){
+                this.set(text);
+                this.element.show();
+            }.bind(this));
+        }else{
+            this.panel = new Protolus.Panel(panel);
+            this.panel.render(this.data, function(text){
+                this.set(text);
+                this.element.show();
+            }.bind(this));
+        }
+    },
+    set : function(text){
+        if(typeOf(text) == 'array'){
+            this.data = text;
+            if(this.panel){
+                this.panel.render(this.data, function(text){
+                    this.set(text);
+                    this.element.show();
+                }.bind(this));
+            }
+        }else{
+            this.element.innerHTML = text;
+        }
+    },
+    hide : function(){
+        this.element.hide();
+    }
+});
+/*
+Protolus.Window = new Class({
+    Implements: Options,
     options:{
         data : {}, //available in both wrapper and panel renders
         modalsDirectory : 'modals',
@@ -161,16 +331,19 @@ Protolus.Window = new Class({
                 this.snapped = true;
             }
             if(callback) callback(content);
-        if(this.options.onLoad) this.options.onLoad();
+            if(this.options.onLoad) this.options.onLoad();
+        }.bind(this),
+        function(result){
+            console.log(['timeout in set function', result, content, this.wrapper])
         }.bind(this));
     },
     actionTargets : [],
     buildActions : function(includeGlobals){
         //clean
         this.actionsBuilt = true;
-        /*this.actionTargets.each(function(target){
-            target.empty();
-        });*/
+        //this.actionTargets.each(function(target){
+        //    target.empty();
+        //});
         var initialized = {};
         //render
         var actions;
@@ -402,7 +575,7 @@ Protolus.ModalWindow = new Class({
         this.parent();
         if(this.options.screen) this.screen.hide();
     }
-});
+});*/
 
 if(!Element.formValues){
     Element.implement({
