@@ -59,3 +59,16 @@ if(!Array.commonBase){
         }
     });
 }
+
+if(!Array.stringsThatBeginWith){
+    Array.implement({
+        stringsThatBeginWith : function(prefix){ //todo: support callback
+            var results = [];
+            this.each(function(item){
+                if(typeOf(item) != 'string') throw('tried to call stringsThatBeginWith on an array containing something besides strings');
+                if(item.substring(0, prefix.length) == prefix) results.push(item);
+            });
+            return result;
+        }
+    });
+}

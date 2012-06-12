@@ -1,0 +1,13 @@
+{
+    "resource" :[
+        "Data.js",
+        "Datasource.js",
+        "Datastream.js",
+        "MySQLDatasource.js",
+        "MongoDatasource.js",
+        "RabbitDatastream.js"
+    ],
+    "dependency":[
+        "mootools_core"
+    ]
+}

@@ -17,20 +17,22 @@ requires:
 provides: [Request.Stable]
 
 */
-if(!NodeList.prototype.each){
-    NodeList.prototype.each = function(callback){
-        for(index in this){
-            callback(this[index], index);
+if(this.NodeList){
+    if(!NodeList.prototype.each){
+        NodeList.prototype.each = function(callback){
+            for(index in this){
+                callback(this[index], index);
+            }
         }
     }
-}
-
-if(!NodeList.prototype.indexOf){
-    NodeList.prototype.indexOf = function(item){
-        var result = -1;
-        for(index in this){
-            if(item === this[index]) result = index;
+    
+    if(!NodeList.prototype.indexOf){
+        NodeList.prototype.indexOf = function(item){
+            var result = -1;
+            for(index in this){
+                if(item === this[index]) result = index;
+            }
+            return result;
         }
-        return result;
     }
 }

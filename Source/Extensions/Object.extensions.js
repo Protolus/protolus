@@ -116,6 +116,19 @@ if(!Object.expand){
     }
 }
 
+if(!Object.keysThatBeginWith){
+    Object.keysThatBeginWith = function(object, prefix){ //todo: support callback
+        var results = {};
+        Object.each(object, function(item, key){
+            if(typeOf(key) != 'string') throw('tried to call stringsThatBeginWith on an object containing something besides strings');
+            if(key.substring(0, prefix.length) == prefix){
+                results[key.substring(prefix.length)] = item;
+            }
+        });
+        return results;
+    };
+}
+
 /*if(!Object.watch){
     Object.implement({
         watch : function(property, callback, oldValue){

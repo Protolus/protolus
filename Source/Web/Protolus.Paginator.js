@@ -465,13 +465,14 @@ Protolus.InfiniteScroll = new Class({
     dataURL : '',
     fetching : false,
     scrollFunction : null,
-    scrollTarget : window,
+    scrollTarget : false,
     initialize : function(element, options){
         this.showFooter = false;
         // options: itemCount, template, controlsIdentifier
         this.parent(element, options);
         if(options.dataURL) this.dataURL = options.dataURL;
         if(this.options.scrollTarget) this.scrollTarget = document.id(this.options.scrollTarget);
+        else this.scrollTarget = window;
         if(!this.options.itemCount) this.options.itemCount = 0;
         if(!this.options.threshold) this.options.threshold = 0.75;
         if(this.options.threshold.isFloat()){

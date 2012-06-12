@@ -1,0 +1,11 @@
+{
+    "resource" :[
+        "Protolus.js",
+        "Protolus.Lib.js",
+        "Protolus.Logger.js"
+    ],
+    "dependency":[
+        "protolus_init",
+        "midas"
+    ]
+}

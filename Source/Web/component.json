@@ -1,0 +1,16 @@
+{
+    "resource" :[
+        "Protolus.Window.js",
+        "Protolus.WebApplication.js",
+        "Protolus.Panel.js",
+        "Protolus.Paginator.js",
+        "Protolus.Page.js",
+        "Protolus.PageRenderer.js",
+        "Protolus.Modal.js",
+        "Protolus.FileUploader.js"
+    ],
+    "dependency":[
+        "protolus_init",
+        "midas"
+    ]
+}

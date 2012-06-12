@@ -18,6 +18,13 @@ provides: [Request.Stable]
 
 */
 //todo: wrap with conditional
+if(!this.Element){
+    this.Element = new Class({});
+    Element.Events = new Class({});
+}
+if(!this.Elements){
+    this.Elements = new Class({});
+}
 Element.Events.hashchange = {
     onAdd: function (){
         var hash = location.hash;
