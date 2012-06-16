@@ -14,7 +14,7 @@ Protolus.appPort = 77777;
 Protolus.bootstrap({
     console : true
 });
-
+Protolus.verbose = true;
 var application;
 Protolus.require(
     [ 'Extensions', 'Core', 'Web'], function(){
@@ -23,9 +23,6 @@ Protolus.require(
             Protolus.loadClass('Session');
             Protolus.loadClass('User');
             application.authenticatedAPI(function(args, connection){
-                var results = Data.search('User', "id=10 && something = 'blaar(gh' && (thing > 5 || munger=true)");
-                connection.respond('hi there!');
-                return;
                 var path = connection.request.path.substring(1);
                 var parts = path.split('/');
                 if(parts.length > 0 && parts[0] == '') parts.shift();
@@ -34,22 +31,59 @@ Protolus.require(
                 if(!Protolus.classExists(type)) connection.error('Type not found:'+type);
                 if(parts.length == 0) connection.error('No action for type:'+type);
                 var id = parts.shift();
-                if(typeOf(id) != 'number'){
-                    if(id != 'create') connection.error('Unsupported action('+id+') for type:'+type);
-                    var object = Data.new(type);
-                    if(args.values) Object.each(args.values, function(item, key){
-                        object.set(key, item);
-                    });
-                    object.save(function(){
-                        connection.respond(JSON.encode(object.data));
-                    });
+                if(!Protolus.isNumeric(id)){
+                    if(id != 'create' && id != 'list') connection.error('Unsupported action('+id+') for type:'+type);
+                    if(id === 'list'){ //list objects
+                        var results = Data.query(
+                            type, '', 
+                            {
+                                onSuccess : function(data){
+                                    connection.respond(JSON.encode({
+                                        response:'success', 
+                                        data:data
+                                    }));
+                                }, 
+                                onFailure : function(error){
+                                    connection.error(error);
+                                }
+                            }
+                        );
+                    }else{ //create a new object
+                        var object = Data.new(type);
+                        if(args.values) Object.each(args.values, function(item, key){
+                            object.set(key, item);
+                        });
+                        object.save(function(){
+                            connection.respond(JSON.encode({
+                                response:'success', 
+                                data:object.data
+                            }));
+                        });
+                    }
                     return;
+                }else{
+                    var object = Data.new(type);
+                    object.load(id, function(){
+                        if(parts.length > 0 && parts[0] == 'edit'){
+                            if(args.values) Object.each(args.values, function(item, key){
+                                object.set(key, item);
+                            });
+                            object.save(function(){
+                                connection.respond(JSON.encode({
+                                    response:'success', 
+                                    data:object.data
+                                }));
+                            });
+                        }else{
+                            connection.respond(JSON.encode({
+                                response:'success', 
+                                data:object.data
+                            }));
+                        }
+                    }, function(){
+                        connection.error('Could not load '+object.primaryKey+' ('+id+')');
+                    });
                 }
-                console.log('type:'+type);
-                console.log('arguments');
-                console.log(args);
-                //console.log(connection.request);
-                connection.respond('hi there!');
             }, function(args, connection, message){
                 var prettyError = message;
                 var type = 'error';

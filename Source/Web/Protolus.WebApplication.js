@@ -22,6 +22,7 @@ Protolus.WebConnection = new Class({
     initialize : function(request, response){
         this.request = request;
         this.response = response;
+        this.id = System.uuid.v1();
     },
     error : function(options, type, callback){
         if(typeOf(options) == 'string') options = {message:options};
@@ -32,6 +33,7 @@ Protolus.WebConnection = new Class({
         }
         var action = 'error';
         switch(options.type){}
+        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', Protolus.errorColor)+']:'+options.message);
         this.respond(options.message, action);
         if(callback) callback(options);
     },
@@ -97,6 +99,7 @@ Protolus.WebConnection = new Class({
             if(!options.type) options.type = 'error';
             if(options.message) response.message = options.message;
             response.code = this.htmlStatusToCode(options.type);
+            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', 'red+blink')+']:'+options.message);
             this.respond(JSON.encode(response), options.type);
             if(callback) callback(response);
         }
@@ -120,7 +123,6 @@ Protolus.WebApplication = new Class({
     },
     authenticatedAPI : function(callback, fail){
         this.API(function(args, connection){
-            console.log('args', args);
             if( (!args.api_key) && (!args.api_token) ) return fail(args, connection, 'no_credentials');
             if(args.api_token){
                 Data.search('Session', 'key=\''+args.api_token+'\'', function(sessions){
@@ -131,9 +133,15 @@ Protolus.WebApplication = new Class({
                 });
                 //if(sessions.length == 0) fail(args, 'invalid_key');
             }else if(args.api_key){
-                Data.search('APIKey', 'key=\''+args.api_key+'\'', function(keys){
-                    if(keys.length == 1) callback(args, connection);
-                    if(keys.length == 0) return fail(args, connection, 'invalid_key');
+                Data.search('APIKey', 'api_key=\''+args.api_key+'\'', function(keys){
+                    if(keys.length == 1){
+                        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('AUTHENTICATED', 'green')+':'+connection.id+']');
+                        callback(args, connection);
+                    }
+                    if(keys.length == 0){
+                        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('AUTHENTICATION FAILED', 'red+blink')+':'+connection.id+']');
+                        return fail(args, connection, 'invalid_key');
+                    }
                 });
                 //todo log if keys are ever > 1
             }
@@ -145,6 +153,7 @@ Protolus.WebApplication = new Class({
         Protolus.addEvent('web', function (request, response) {
             connection = new Protolus.WebConnection(request, response);
             if(this.api) connection.api();
+            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('CONNECT', 'yellow')+':'+connection.id+']');
             //var crypto = require('crypto');
             //if(extendedLogging) Logger.id = crypto.createHash('md5').update(uuid.v1()).digest("hex");
             var args = {};

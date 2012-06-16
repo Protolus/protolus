@@ -2,16 +2,33 @@ this.Datasource = new Class({
     initialize : function(options){
         Data.sources[options.name] = this;
     },
-    search : function(type, querystring, options, callback){
+    search : function(type, query, options, callback){
+        var successFunction = options.onSuccess;
+        options.onSuccess = function(data){
+            results = [];
+            data.each(function(row){
+                var dummy = Data.new(type);
+                dummy.data = row;
+                results.push(dummy);
+            });
+            if(successFunction) successFunction(results);
+        };
+        var failureFunction = options.onFailure;
+        options.onFailure = function(error){
+            if(failureFunction) failureFunction(error);
+        };
+        
+        this.query(type, query, options, callback);
+    },
+    query : function(type, query, options, callback){
         if(typeOf(options) == 'function'){
             callback = options;
             options = {};
         }
         if(!options) options = {};
-        var query = this.parseWhere(querystring);
         var predicate = this.buildPredicate(query)
         return this.performSearch(type, predicate, (callback || options.onSuccess), (
-            options.onFailure || function(err){ console.log('[ERROR]:'+JSON.encode(err)); }
+            options.onFailure || function(err){ console.log('['+AsciiArt.ansiCodes('ERROR', 'red+blink')+']:'+JSON.encode(err)); }
         ));
     },
     save: function(object, callback){

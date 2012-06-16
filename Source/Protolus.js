@@ -17,9 +17,13 @@ if(!Protolus) var Protolus = {};
 Protolus.missingResource = function(uri) {
     console.log('Resource missing: '+uri);
 }
+Protolus.verbose = false;
 Protolus.classExists = function(classname) {
     return !!Data.dummies[classname];
-}
+};
+Protolus.isNumeric = function(value){
+    return !isNaN(value * 1);
+};
 Protolus.require = function(module, callback){
     if(!Protolus.resources) Protolus.resourceLoader(Protolus.resourceDirectory);
     if(typeOf(module) == 'array'){

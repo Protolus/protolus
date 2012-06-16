@@ -51,12 +51,19 @@ this.Data.coreFields = ['modification_time', 'creation_time', 'modifier_id', 'cr
 this.Data.sources = {};
 this.Data.autoLink = false; // join logic 
 this.Data.search = function(type, querystring, options){ //query is a query object or an object
+    if(!options) options = {};
     var dummy = Data.dummy(type);
     var datasource = Datasource.get(dummy.options.datasource);
-    console.log('q', querystring);
     var query = Data.parse(querystring);
     return datasource.search(dummy.options.name, query, options);
-}
+};
+this.Data.query = function(type, querystring, options){ //query is a query object or an object
+    if(!options) options = {};
+    var dummy = Data.dummy(type);
+    var datasource = Datasource.get(dummy.options.datasource);
+    var query = Data.parse(querystring);
+    return datasource.query(dummy.options.name, query, options);
+};
 this.Data.id = function(type){
     if(!type) type = 'uuid';
     switch(type){
@@ -69,7 +76,6 @@ this.Data.id = function(type){
 };
 this.Data.new = function(type){
     try{
-        console.log('new '+type);
         eval('this.lastProtolusObject = new GLOBAL.'+type+'();');
         var result = this.lastProtolusObject;
         delete this.lastProtolusObject;
@@ -84,20 +90,62 @@ this.Data.WhereParser = new Class({
     blockClose : ')',
     escapeOpen : '\'',
     escapeClose : '\'',
+    sentinels : ['and', 'or', '&&', '||'],
+    operators : ['=', '<', '>', '!'],
+    textEscape : ['\''],
     parse : function(query){
         return this.parse_where(query);
     },
     parse_where : function(clause){
-        //return [];
-        var parsed = this.parse_blocks(clause);
-        console.log('parsed', parsed);
+        var blocks = this.parse_blocks(clause);
+        var phrases = this.parse_compound_phrases(blocks, []);
+        var object = this;
+        var mapFunction = function(value){
+            if(typeOf(value) == 'array'){
+                return value.map(mapFunction);
+            }else{
+                if(object.sentinels.contains(value.toLowerCase())){
+                    return {
+                        type : 'conjunction',
+                        value : value
+                    }
+                }else{
+                    return object.parse_discriminant(value);
+                }
+            }
+        };
+        var parsed = phrases.map(mapFunction);
+        return parsed;
     },
     parse_discriminant : function(text){
         var key = '';
         var operator = '';
         var value = '';
-        var inQuote = '';
-        
+        var inQuote = false;
+        var openQuote = '';
+        for(var lcv=0; lcv < text.length; lcv++){
+            ch = text[lcv];
+            if(inQuote && ch === inQuote){
+                inQuote = false;
+                continue;
+            }
+            if( (!inQuote) && this.textEscape.contains(ch)){
+                inQuote = ch;
+                continue;
+            }
+            if(this.operators.contains(ch)){
+                operator += ch;
+                continue;
+            }
+            if(operator !== '') value += ch;
+            else key += ch;
+        }
+        return {
+            type : 'expression',
+            key : key,
+            operator : operator,
+            value : value
+        };
     },
     parse_blocks : function(parseableText){
         var ch;
@@ -107,7 +155,6 @@ this.Data.WhereParser = new Class({
         var text = '';
         var root = env;
         for(var lcv=0; lcv < parseableText.length; lcv++){
-            console.log('ch', ch);
             ch = parseableText[lcv];
             if(textMode){
                 text += ch;
@@ -144,23 +191,45 @@ this.Data.WhereParser = new Class({
         array.each(function(item){
             var type = typeOf(item);
             if(type == 'array'){
-                results = [];
-                this.parse_compound_phrases(item, results);
+                var results = this.parse_compound_phrases(item, []);
                 result.push(results);
             }else if(type == 'string'){
-                result = this.parse_compound_phrase(); //won't work in js
+                result = this.parse_compound_phrase(item);
             }
-        });
+        }.bind(this));
+        return result;
     },
     parse_compound_phrase : function(clause){
-        var parts = clause.split(/(?= [Aa][Nn][Dd] ?| [Oo][Rr] ?|\|\||&&)/);
-        var results = [];
-        parts.each(function(part){
-            results.merge(part.split(/(?<= [Aa][Nn][Dd] | [Oo][Rr] |\|\||&&)/));
-        });
-        results.each(function(value, key){
-            if(value.trim() == '') delete value[key];
-            else results[key] = value.trim();
-        });
+        var inText = false;
+        var escape = '';
+        var current = '';
+        var results = [''];
+        for(var lcv=0; lcv < clause.length; lcv++){
+            ch = clause[lcv];
+            if(inText){
+                results[results.length-1] += current+ch;
+                current = '';
+                if(ch === escape) inText = false;
+            }else{
+                if(this.textEscape.contains(ch)){
+                    inText = true;
+                    escape = ch;
+                }
+                if(ch != ' '){
+                    current += ch;
+                    if(this.sentinels.contains(current.toLowerCase())){
+                        results.push(current);
+                        results.push('');
+                        current = '';
+                    }
+                }else{
+                    results[results.length-1] += current;
+                    current = '';
+                }
+            }
+        }
+        if(current != '') results[results.length-1] += current;
+        if(results[results.length-1] === '') results.pop();
+        return results;
     }
-})
+});

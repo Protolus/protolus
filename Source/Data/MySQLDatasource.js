@@ -6,7 +6,7 @@ this.MySQLDatasource = new Class({
         this.connection = mysql.createClient(options);
     },
     log : function(text){
-        console.log(text);
+        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('DATA', 'magenta')+']', text);
     },
     buildWhereClause: function(predicate){
         if(typeOf(predicate) == 'array') predicate = {discriminants:predicate};
@@ -45,18 +45,35 @@ this.MySQLDatasource = new Class({
             errorCallback
         );
     },
-    buildPredicate: function(predicate){
-        
+    buildPredicate: function(predicate){ // the real where clause builder
+        var result = [];
+        predicate.each(function(item){
+            if(typeOf(item) == 'array'){
+                result.push('('+this.buildPredicate(item)+')');
+            }else{
+                if(item.type == 'conjunction'){
+                    if(item.value === '&&') item.value = 'and';
+                    if(item.value === '||') item.value = 'or';
+                    result.push(item.value.toUpperCase());
+                }
+                if(item.type == 'expression'){
+                    var value = (
+                        (Protolus.isNumeric(item.value) || item.value == 'true' || item.value == 'false')
+                        ?item.value
+                        :'\''+item.value+'\''
+                    );
+                    result.push('`'+item.key+'` '+item.operator+' '+value);
+                }
+            }
+        }.bind(this));
+        return result.join(' ');
     },
     performSearch : function(type, predicate, callback, errorCallback){
         var query = '';
         if(typeOf(predicate) == 'string'){ //raw sql
-            query = search;
+            query = 'SELECT * FROM '+type+(predicate!=''?' WHERE '+predicate:'');
         }else{ // json based search object
-            if(!type) new Error('Search has no type!');
-            var query = 'SELECT * FROM '+type
-            var discriminants;
-            //more
+            //something else?
         }
         this.execute(query, callback, errorCallback);
     },
@@ -67,7 +84,10 @@ this.MySQLDatasource = new Class({
         this.connection.query(query, function(error, results, fields){
             if(this.debug) console.log('['+AsciiArt.ansiCodes('Query', 'blue')+']:'+query);
             if(this.debug) console.log('['+AsciiArt.ansiCodes('Results', 'blue')+']:'+JSON.encode(results));
-            this.log(query+(results && results.length?' -> {'+results.length+'}':''), 'Query');
+            if(Protolus.verbose){
+                if(this.debug) this.log(query+(results && results.length?' -> {'+results.length+'}':''), 'Query');
+                else this.log(query.split( / ([wW][Hh][Ee][Rr][Ee]|[Ss][Ee][Tt]) / ).shift()+'...'+(results && results.length?' -> {'+results.length+'}':''), 'Query');
+            }
             if(error && errorCallback) {
                 errorCallback('[MySQL]'+error);
                 return;
@@ -90,7 +110,7 @@ this.MySQLDatasource = new Class({
         this.execute(
             'select * from '+object.options.name+' where '+object.primaryKey+' =\''+object.get(object.primaryKey)+'\'',
             function(results){
-                if(!results || results.length == 0){ if(errorCallback) errorCallback('Object['+id+'] not found', errorCallback);
+                if(!results || results.length == 0){ if(errorCallback) errorCallback('Object['+object.get(object.primaryKey)+'] not found', errorCallback);
                 }else{
                     object.data = results[0];
                     object.exists = true;
