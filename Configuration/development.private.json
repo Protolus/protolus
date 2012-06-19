@@ -4,14 +4,17 @@
         "cookie_domain": "protolus.dev"
     },
     "DB:database":{
+        "type":"mongo",
+        "database" : "protolus",
+        "host" : "localhost",
+        "session":"true"
+    },
+    "DB:transactional":{
         "type":"mysql",
         "database" : "protolus",
         "host" : "localhost",
         "user" : "root",
-        "password" : "",
-        "mode":"mysql",
-        "session":"true",
-        "session_hook":"php"
+        "password" : ""
     },
     "DB:events":{
         "type":"rabbit",

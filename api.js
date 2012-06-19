@@ -2,6 +2,7 @@
 GLOBAL.mysql = require("mysql");
 GLOBAL.mongo = require("mongojs");
 GLOBAL.amqp = require("amqp");
+require('AsciiArt').apply(GLOBAL);
 require('Protolus.Bootstrap').apply(GLOBAL);
 
 Protolus.resourceDirectory = __dirname+'/Source';
@@ -22,6 +23,7 @@ Protolus.require(
             Protolus.loadClass('APIKey');
             Protolus.loadClass('Session');
             Protolus.loadClass('User');
+            application.consoleOutput();
             application.authenticatedAPI(function(args, connection){
                 var path = connection.request.path.substring(1);
                 var parts = path.split('/');
@@ -38,6 +40,7 @@ Protolus.require(
                             type, '', 
                             {
                                 onSuccess : function(data){
+                                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
                                     connection.respond(JSON.encode({
                                         response:'success', 
                                         data:data
@@ -54,9 +57,16 @@ Protolus.require(
                             object.set(key, item);
                         });
                         object.save(function(){
+                            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
                             connection.respond(JSON.encode({
                                 response:'success', 
                                 data:object.data
+                            }));
+                        }, function(err){
+                            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
+                            connection.respond(JSON.encode({
+                                response:'failure', 
+                                message:err
                             }));
                         });
                     }

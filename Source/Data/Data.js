@@ -50,19 +50,23 @@ this.Data.parse = function(query, options){
 this.Data.coreFields = ['modification_time', 'creation_time', 'modifier_id', 'creator_id', 'record_status'];
 this.Data.sources = {};
 this.Data.autoLink = false; // join logic 
-this.Data.search = function(type, querystring, options){ //query is a query object or an object
+this.Data.search = function(type, querystring, options, errorCallback){ //query is a query object or an object
+    if(typeOf(options) == 'function') options = {onSuccess: options};
     if(!options) options = {};
+    if(errorCallback && typeOf(errorCallback) == 'function') options['onFailure'] = errorCallback;
     var dummy = Data.dummy(type);
     var datasource = Datasource.get(dummy.options.datasource);
     var query = Data.parse(querystring);
-    return datasource.search(dummy.options.name, query, options);
+    return datasource.search(type, query, options);
 };
 this.Data.query = function(type, querystring, options){ //query is a query object or an object
+    if(typeOf(options) == 'function') options = {onSuccess: options};
     if(!options) options = {};
+    if(errorCallback && typeOf(errorCallback) == 'function') options['onFailure'] = errorCallback;
     var dummy = Data.dummy(type);
     var datasource = Datasource.get(dummy.options.datasource);
     var query = Data.parse(querystring);
-    return datasource.query(dummy.options.name, query, options);
+    return datasource.query(type, query, options);
 };
 this.Data.id = function(type){
     if(!type) type = 'uuid';
@@ -79,10 +83,10 @@ this.Data.new = function(type){
         eval('this.lastProtolusObject = new GLOBAL.'+type+'();');
         var result = this.lastProtolusObject;
         delete this.lastProtolusObject;
-        return result
+        return result;
     }catch(ex){
         console.log(ex);
-        throw('Object creation error!');
+        throw('Object creation('+type+') error!');
     }
 }
 this.Data.WhereParser = new Class({

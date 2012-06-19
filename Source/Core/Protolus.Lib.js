@@ -22,6 +22,7 @@ Protolus.Application = new Class({
     configurations : {},
     datasources : {},
     mode : 'public',
+    environment : false,
     options : {
         directory : 'Configuration',
         data : false
@@ -29,8 +30,9 @@ Protolus.Application = new Class({
     initialize : function(options, callback){
         this.setOptions(options);
         if(Protolus.isNode) this.mode = 'private';
+        this.environment = this.getEnvironment('PROTOLUS_MACHINE_TYPE') || 'production';
         if(this.options.data){
-            this.loadConfiguration(Protolus.configurationDirectory+'/'+this.getEnvironment('PROTOLUS_MACHINE_TYPE')+'.'+this.mode+'.json', function(){
+            this.loadConfiguration(Protolus.configurationDirectory+'/'+this.environment+'.'+this.mode+'.json', function(){
                 this.enableData(callback);
             }.bind(this));
         }
@@ -49,37 +51,38 @@ Protolus.Application = new Class({
     error : function(error, type){
         console.log(error);
     },
+    consoleOutput : function(){
+        function ansiBox(text, color, boxColor, width){
+            var halfwidth = (width-text.length-1)/2;
+            var lpad = (halfwidth < 0)?'':Array(Math.floor(halfwidth)+1).join(" ");
+            var rpad = (halfwidth < 0)?'':Array(Math.ceil(halfwidth)+1).join(" ");
+            var message = AsciiArt.ansiCodes(text, color);
+            return AsciiArt.ansiCodes('[', boxColor)+lpad+message+rpad+AsciiArt.ansiCodes(']', boxColor);
+        }
+        AsciiArt.font(Protolus.appName, 'Fonts/Doom', function(text){
+            text.split('\n').each(function(line){
+                console.log(AsciiArt.ansiCodes(line, Protolus.appColor));
+            });
+            var status = ansiBox(' v.'+Protolus.appVersion, 'white', 'red', 15);
+            status += ansiBox(this.environment+' mode', 'white', 'red', 20);
+            //status += ansiBox(foundDatasources.join(', '), 'blue', 'yellow', 40);
+            console.log(status);
+        }.bind(this));
+    },
     enableData : function(callback){
         Protolus.require('Data', function(){
             var dbs = Object.keysThatBeginWith(this.configurations, 'DB:');
             Object.each(dbs, function(settings, name){
+                settings.name = name;
                 switch(settings.type){
                     case 'mysql':
-                        this.datasources[name] = new MySQLDatasource({
-                            host: settings.host,
-                            user: settings.user,
-                            password: settings.password,
-                            database: settings.database,
-                            name: name
-                        });
+                        this.datasources[name] = new MySQLDatasource(settings);
                         break;
                     case 'mongo':
-                        this.datasources[name] = new MongoDatasource({
-                            host: settings.host,
-                            user: settings.user,
-                            password: settings.password,
-                            database: settings.database,
-                            name: name
-                        });
+                        this.datasources[name] = new MongoDatasource(settings);
                         break;
                     case 'rabbit':
-                        this.datasources[name] = new RabbitDatastream({
-                            host: settings.host,
-                            user: settings.user,
-                            password: settings.password,
-                            database: settings.database,
-                            name: name
-                        });
+                        this.datasources[name] = new RabbitDatastream(settings);
                         break;
                     default:
                         new APIError('Unsupported Type('+settings.type+')');

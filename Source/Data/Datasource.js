@@ -1,5 +1,7 @@
 this.Datasource = new Class({
+    Implements : Options,
     initialize : function(options){
+        this.setOptions(options);
         Data.sources[options.name] = this;
     },
     search : function(type, query, options, callback){
@@ -21,6 +23,8 @@ this.Datasource = new Class({
         this.query(type, query, options, callback);
     },
     query : function(type, query, options, callback){
+        var dummy = Data.dummy(type);
+        type = dummy.options.name;
         if(typeOf(options) == 'function'){
             callback = options;
             options = {};

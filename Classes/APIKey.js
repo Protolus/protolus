@@ -5,7 +5,6 @@ new Class({
         if(!options) options = {};
         options.datasource = 'database';
         options.name = 'api_key';
-        this.parent(options);
         this.fields = [
             'key',
             'name',

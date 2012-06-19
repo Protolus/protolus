@@ -33,7 +33,8 @@ Protolus.WebConnection = new Class({
         }
         var action = 'error';
         switch(options.type){}
-        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', Protolus.errorColor)+']:'+options.message);
+        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', Protolus.errorColor)+':'+this.id+']:'+options.message);
+        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+this.id+']');
         this.respond(options.message, action);
         if(callback) callback(options);
     },
@@ -103,6 +104,30 @@ Protolus.WebConnection = new Class({
             this.respond(JSON.encode(response), options.type);
             if(callback) callback(response);
         }
+    },
+    html : function(){
+        this.respond = function(message, code){
+            if(!code) code = 'ok';
+            code = this.htmlStatusToCode(code);
+            this.response.writeHead(code);
+            this.response.end(message);
+        }.bind(this);
+        this.error = function(options, type, callback){
+            if(typeOf(options) == 'string') options = {message:options};
+            if(typeOf(type) == 'string' || typeOf(type) == 'number') options.type = type;
+            if(!callback && typeOf(type) == 'function'){
+                callback = type;
+                delete type;
+            }
+            var response = {};
+            response.status = 'error';
+            if(!options.type) options.type = 'error';
+            if(options.message) response.message = options.message;
+            response.code = this.htmlStatusToCode(options.type);
+            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', 'red+blink')+']:'+options.message);
+            this.respond(JSON.encode(response), options.type);
+            if(callback) callback(response);
+        }
     }
 });
 Protolus.WebApplication = new Class({
@@ -142,6 +167,8 @@ Protolus.WebApplication = new Class({
                         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('AUTHENTICATION FAILED', 'red+blink')+':'+connection.id+']');
                         return fail(args, connection, 'invalid_key');
                     }
+                },
+                function(){
                 });
                 //todo log if keys are ever > 1
             }
