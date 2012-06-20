@@ -21,6 +21,7 @@ Protolus.require(
     [ 'Extensions', 'Core', 'Web'], function(){
         application = new Protolus.WebApplication( { data : true }, function(){
             Protolus.loadClass('APIKey');
+            Protolus.loadClass('APIToken');
             Protolus.loadClass('Session');
             Protolus.loadClass('User');
             application.consoleOutput();
@@ -79,18 +80,23 @@ Protolus.require(
                                 object.set(key, item);
                             });
                             object.save(function(){
+                                if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
                                 connection.respond(JSON.encode({
                                     response:'success', 
                                     data:object.data
                                 }));
+                            },function(err){
+                                connection.error('Could not save '+object.primaryKey+' ('+id+')');
+                                throw(err);
                             });
                         }else{
+                            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
                             connection.respond(JSON.encode({
                                 response:'success', 
                                 data:object.data
                             }));
                         }
-                    }, function(){
+                    }, function(err){
                         connection.error('Could not load '+object.primaryKey+' ('+id+')');
                     });
                 }

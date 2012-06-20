@@ -33,7 +33,7 @@ Protolus.WebConnection = new Class({
         }
         var action = 'error';
         switch(options.type){}
-        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', Protolus.errorColor)+':'+this.id+']:'+options.message);
+        if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('⚠ ERROR', Protolus.errorColor)+':'+this.id+']:'+options.message);
         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+this.id+']');
         this.respond(options.message, action);
         if(callback) callback(options);
@@ -100,7 +100,7 @@ Protolus.WebConnection = new Class({
             if(!options.type) options.type = 'error';
             if(options.message) response.message = options.message;
             response.code = this.htmlStatusToCode(options.type);
-            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', 'red+blink')+']:'+options.message);
+            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+options.message);
             this.respond(JSON.encode(response), options.type);
             if(callback) callback(response);
         }
@@ -124,7 +124,7 @@ Protolus.WebConnection = new Class({
             if(!options.type) options.type = 'error';
             if(options.message) response.message = options.message;
             response.code = this.htmlStatusToCode(options.type);
-            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('ERROR', 'red+blink')+']:'+options.message);
+            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+options.message);
             this.respond(JSON.encode(response), options.type);
             if(callback) callback(response);
         }
@@ -150,7 +150,7 @@ Protolus.WebApplication = new Class({
         this.API(function(args, connection){
             if( (!args.api_key) && (!args.api_token) ) return fail(args, connection, 'no_credentials');
             if(args.api_token){
-                Data.search('Session', 'key=\''+args.api_token+'\'', function(sessions){
+                Data.search('APIToken', 'token=\''+args.api_token+'\'', function(sessions){
                     if(sessions.length == 1){
                         callback(args, connection);
                         return;
@@ -158,10 +158,26 @@ Protolus.WebApplication = new Class({
                 });
                 //if(sessions.length == 0) fail(args, 'invalid_key');
             }else if(args.api_key){
-                Data.search('APIKey', 'api_key=\''+args.api_key+'\'', function(keys){
+                Data.search('APIKey', 'key=\''+args.api_key+'\'', function(keys){
                     if(keys.length == 1){
                         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('AUTHENTICATED', 'green')+':'+connection.id+']');
-                        callback(args, connection);
+                        var api_key = keys[0].get('key');
+                        Data.search('APIToken', 'api_key=\''+api_key+'\'', function(existingTokens){
+                            existingTokens.each(function(token){
+                                token.delete();
+                            });
+                            var token = new APIToken();
+                            token.set('token', Data.id('uuid'));
+                            token.set('type', 'user');
+                            token.set('verbose', false);
+                            token.set('api_key', api_key);
+                            token.save(function(){
+                                callback(args, connection);
+                            });
+                        },function(){
+                            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('TOKEN CREATE FAILED', 'red+blink')+':'+connection.id+']');
+                            return fail(args, connection, 'error');
+                        });
                     }
                     if(keys.length == 0){
                         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('AUTHENTICATION FAILED', 'red+blink')+':'+connection.id+']');

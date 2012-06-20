@@ -8,33 +8,11 @@ this.MySQLDatasource = new Class({
     log : function(text){
         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('DATA', 'magenta')+']', text);
     },
-    buildWhereClause: function(predicate){
-        if(typeOf(predicate) == 'array') predicate = {discriminants:predicate};
-        if(!predicate.mode) predicate.mode == 'AND';
-        predicate.mode = predicate.mode.toUpperCase();
-        var clause = '';
-        predicate.discriminants.each(function(discriminant){
-            if(discriminant.enclose){
-                discriminant.operator = 'enclosure';
-                discriminant.value = discriminant.enclose
-            }
-            switch(discriminant.operator.toLowerCase()){
-                case 'in':
-                    if(typeOf(discriminant.value) == 'array') 
-                        clause += 'IN ('+discriminant.value.map(function(item){
-                            if(typeOf(item) == 'string') return '\''+item+'\'';
-                            else return item;
-                        }).join(',')+')';
-                    else clause += 'IN ('+discriminant.value+')';
-                    break;
-                case 'enclosure':
-                    clause += '('+buildWhereClause(discriminant.value)+')';
-                    break;
-                default:
-                    clause += discriminant.field+' '+discriminant.operator+' '+discriminant.value;
-            }
-        });
-        
+    getRepresentation : function(type, value){
+        switch(this.options[key]['type']){
+            case 'mongoid': throw('mongoIDs cannot be used in a MySQL context');
+            default : return this.data[key];
+        }
     },
     lastId : function(type, callback, errorCallback){
         this.execute(

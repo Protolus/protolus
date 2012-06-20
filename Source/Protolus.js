@@ -22,7 +22,7 @@ Protolus.classExists = function(classname) {
     return !!Data.dummies[classname];
 };
 Protolus.isNumeric = function(value){
-    return !isNaN(value * 1);
+    return (!isNaN(value * 1)) || value.match(/^[0-9][0-9a-f]*$/);
 };
 Protolus.require = function(module, callback){
     if(!Protolus.resources) Protolus.resourceLoader(Protolus.resourceDirectory);

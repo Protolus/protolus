@@ -4,28 +4,95 @@ this.Data = new Class({
     datasource : null,
     exists : false,
     fields : [],
+    virtuals : {},
+    options : {},
     initialize : function(options){
         if(!options.datasource) new Error('Datasource not specified for object!');
         if(!options.name) new Error('Data name not specified for object!');
         if(!Data.sources[options.datasource]) new Error('Datasource not found for object!');
         this.options = options;
-        this.datasource = Data.sources[options.datasource];
+        this.datasource = Datasource.get(options.datasource);
+        switch(this.datasource.options.type){
+            case 'mongo':
+                if(this.primaryKey == 'id'){ //if we index by id, we'll assume mongo's _id will do just as well 
+                    this.fields.erase('id');
+                    this.virtualAlias('id', '_id');
+                    /*this.virtualSetter('id', function(value){
+                        console.log('id', value);
+                        throw ('Mongo IDs cannot be altered!');
+                    });*/
+                    this.primaryKey = '_id';
+                    this.setOption('type', '_id', 'mongoid');
+                }
+                break;
+            case 'mysql':
+                
+                break;
+        }
     },
-    get : function(key){
-        if(this.data[key]) return this.data[key];
+    get : function(key, typed){
+        if(this.virtuals[key] && this.virtuals[key].get){
+            return this.virtuals[key].get(key, typed);
+        }else if(this.data[key]){
+            if(typed) return this.datasource.getRepresentation(this.options[key]['type'], this.data[key]);
+            else return this.data[key];
+        }
+    },
+    getByType : function(key, value){
+        if(this.virtuals[key] && this.virtuals[key].get){
+            return this.virtuals[key].type(value);
+        }else if(this.data[key]){
+            if(typed) return this.datasource.getRepresentation(this.options[key]['type'], value);
+            else return value;
+        }
     },
     set : function(key, value){
-        this.data[key] = value;
+        if(this.virtuals[key] && this.virtuals[key].set){
+            this.data[key] = this.virtuals[key].set(value);
+        }else{
+            this.data[key] = value;
+        }
+    },
+    setOption : function(option, key, value){
+        if(!this.options[key]) this.options[key] = {};
+        this.options[key][option] = value;
+    },
+    virtualSetter : function(key, callback){
+        if(!this.virtuals[key]) this.virtuals[key] = {};
+        this.virtuals[key]['set'] = callback;
+    },
+    virtualGetter : function(key, callback){
+        if(!this.virtuals[key]) this.virtuals[key] = {};
+        this.virtuals[key]['get'] = callback;
+    },
+    virtualByType : function(key, callback){
+        if(!this.virtuals[key]) this.virtuals[key] = {};
+        this.virtuals[key]['type'] = callback;
+    },
+    virtualAlias : function(key, value){
+        if(!this.virtuals[key]) this.virtuals[key] = {};
+        this.virtuals[key]['alias'] = value;
+        this.virtualGetter(key, function(typed){
+            if(typed && this.options[key]['type']) return this.datasource.getRepresentation(this.options[key]['type'], value);
+            return this.get(value);
+        }.bind(this));
+        this.virtualSetter(key, function(incoming){
+            return this.data[value] = incoming;
+        }.bind(this));
+        this.virtualByType(key, function(incoming){
+            return this.getByType(value, incoming);
+        }.bind(this));
     },
     load : function(id, callback, errorCallback){
         this.data[this.primaryKey] = id;
-        if(!this.db) this.db = Datasource.get(this.options.datasource);
-        return this.db.load(this, callback, errorCallback);
+        return this.datasource.load(this, callback, errorCallback);
+    },
+    delete : function(callback, errorCallback){
+        return this.datasource.delete(this, callback, errorCallback);
     },
     save : function(callback, errorCallback){
-        if(!this.db) this.db = Datasource.get(this.options.datasource);
         //if(!this.db) console.log('could not find datasource:'+this.options.datasource, Data.sources);
-        return this.db.save(this, function(data){
+        return this.datasource.save(this, function(data){
             this.data = data;
             if(callback) callback(data);
         }, errorCallback);

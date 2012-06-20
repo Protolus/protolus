@@ -4,14 +4,14 @@ new Class({
         if(typeOf(options) == 'string') options = {key:options};
         if(!options) options = {};
         options.datasource = 'database';
-        options.name = 'api_key';
+        options.name = 'api_token';
         this.fields = [
-            'key',
-            'name',
-            'secret',
-            'contact'
+            'token',
+            'type',
+            'verbose',
+            'api_key'
         ];
-        this.primaryKey = 'key';
+        this.primaryKey = 'id';
         this.parent(options);
         if(options.key) this.load(options.key);
     }
