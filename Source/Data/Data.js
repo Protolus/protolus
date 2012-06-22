@@ -42,9 +42,9 @@ this.Data = new Class({
         if(this.virtuals[key] && this.virtuals[key].get){
             return this.virtuals[key].type(value);
         }else if(this.data[key]){
-            if(typed) return this.datasource.getRepresentation(this.options[key]['type'], value);
+            if(this.options[key] && this.options[key]['type']) return this.datasource.getRepresentation(this.options[key]['type'], value);
             else return value;
-        }
+        }else return value;
     },
     set : function(key, value){
         if(this.virtuals[key] && this.virtuals[key].set){
@@ -92,9 +92,9 @@ this.Data = new Class({
     },
     save : function(callback, errorCallback){
         //if(!this.db) console.log('could not find datasource:'+this.options.datasource, Data.sources);
-        return this.datasource.save(this, function(data){
+        return this.datasource.save(this, function(data, info){
             this.data = data;
-            if(callback) callback(data);
+            if(callback) callback(data, info);
         }, errorCallback);
     },
 });
@@ -126,7 +126,7 @@ this.Data.search = function(type, querystring, options, errorCallback){ //query 
     var query = Data.parse(querystring);
     return datasource.search(type, query, options);
 };
-this.Data.query = function(type, querystring, options){ //query is a query object or an object
+this.Data.query = function(type, querystring, options, errorCallback){ //query is a query object or an object
     if(typeOf(options) == 'function') options = {onSuccess: options};
     if(!options) options = {};
     if(errorCallback && typeOf(errorCallback) == 'function') options['onFailure'] = errorCallback;

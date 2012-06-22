@@ -22,6 +22,7 @@ Protolus.WebConnection = new Class({
     initialize : function(request, response){
         this.request = request;
         this.response = response;
+        this.cookies = new System.cookies(request, response);
         this.id = System.uuid.v1();
     },
     error : function(options, type, callback){
@@ -154,7 +155,12 @@ Protolus.WebApplication = new Class({
                     if(sessions.length == 1){
                         callback(args, connection);
                         return;
+                    }else{
+                        return fail(args, connection, 'no_credentials');
                     }
+                },function(err){
+                    return fail(args, connection, 'no_credentials');
+                    throw(err)
                 });
                 //if(sessions.length == 0) fail(args, 'invalid_key');
             }else if(args.api_key){
@@ -174,6 +180,7 @@ Protolus.WebApplication = new Class({
                             token.save(function(){
                                 callback(args, connection);
                             });
+                            connection.cookies.set('api_token', token.get('token'));
                         },function(){
                             if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('TOKEN CREATE FAILED', 'red+blink')+':'+connection.id+']');
                             return fail(args, connection, 'error');

@@ -37,20 +37,25 @@ Protolus.require(
                 if(!Protolus.isNumeric(id)){
                     if(id != 'create' && id != 'list') connection.error('Unsupported action('+id+') for type:'+type);
                     if(id === 'list'){ //list objects
+                        var options = {
+                            onSuccess : function(data, info){
+                                if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
+                                connection.respond(JSON.encode(Object.merge({
+                                    response:'success', 
+                                    data:data
+                                }, info)));
+                            }, 
+                            onFailure : function(error){
+                                connection.error(error);
+                            },
+                            limit : 10
+                        };
+                        if(args.page) options.page = parseInt(args.page);
+                        if(args.limit) options.limit = parseInt(args.limit);
+                        if(args.offset) options.offset = parseInt(args.offset);
                         var results = Data.query(
                             type, '', 
-                            {
-                                onSuccess : function(data){
-                                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+connection.id+']');
-                                    connection.respond(JSON.encode({
-                                        response:'success', 
-                                        data:data
-                                    }));
-                                }, 
-                                onFailure : function(error){
-                                    connection.error(error);
-                                }
-                            }
+                            options
                         );
                     }else{ //create a new object
                         var object = Data.new(type);

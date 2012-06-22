@@ -30,8 +30,8 @@ this.Datasource = new Class({
             options = {};
         }
         if(!options) options = {};
-        var predicate = this.buildPredicate(query, dummy);
-        return this.performSearch(type, predicate, (callback || options.onSuccess), (
+        var predicate = this.buildPredicate(query, options, dummy);
+        return this.performSearch(type, predicate, options, (callback || options.onSuccess), (
             options.onFailure || function(err){ console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+JSON.encode(err)); }
         ));
     },

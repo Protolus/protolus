@@ -17,7 +17,7 @@ this.MongoDatasource = new Class({
         }
         return result;
     },
-    buildPredicate: function(predicate, object){
+    buildPredicate: function(predicate, options, object){
         var result = {};
         var stack = result;
         predicate.each(function(item){
@@ -60,24 +60,27 @@ this.MongoDatasource = new Class({
     lastId : function(type, callback){
         
     },
-    performSearch : function(type, predicate, callback, errorCallback){
+    performSearch : function(type, predicate, options, callback, errorCallback){
         if(!this.collections[type]) this.collections[type] = this.connection.collection(type);
         var collection = this.collections[type];
-        if(Protolus.verbose){
-            if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+type+'.find(...)', 'Query');
-            else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+type+'.find('+JSON.encode(predicate)+')', 'Query');
-        }
-        collection.find(predicate, function(err, objects) {
+        var request = (this.debug?'db.'+type+'.find('+JSON.encode(predicate)+', '+JSON.encode(options)+')':'db.'+type+'.find({...}, '+JSON.encode(options)+')');
+        var floor = ((options.limit && options.page)?options.limit * (options.page-1):(options.skip?options.skip:1));
+        if(Protolus.verbose && this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+']'+request);
+        var query = collection.find(predicate, function(err, objects) {
             if( err ){
                 if(errorCallback) errorCallback(err);
             } else{
-                if(Protolus.verbose){
-                    if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+type+'.find(...)'+(objects && objects.length?' -> {'+objects.length+'}':''), 'Query');
-                    else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+type+'.find('+JSON.encode(predicate)+')'+(objects && objects.length?' -> {'+objects.length+'}':''), 'Query');
-                }
-                callback(objects);
+                query.count(function(err, count) {
+                    var lastElement = (floor-1)+objects.length;
+                    var range = ((lastElement == floor)?lastElement:(floor+1)+'-'+(lastElement+1));
+                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('DATA'+(this.debug?' RETURN':''), 'magenta')+'] '+request+(objects && objects.length?' -> {'+range+(lastElement+1>=count?'':'/'+count)+'}':''));
+                    callback(objects, {count: count, page:(options.page?options.page:1)});
+                }.bind(this));
             }
         }.bind(this));
+        if(options.limit) query.limit(options.limit);
+        if(options.limit && options.page) query.skip( options.limit * (options.page-1));
+        else if(options.skip) query.skip(options.skip);
     },
     escape: function(value){
         return value;
@@ -91,8 +94,8 @@ this.MongoDatasource = new Class({
             var updateOn = {};
             updateOn[object.primaryKey] = object.get(object.primaryKey, true);
             if(Protolus.verbose){
-                if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.update(...)', 'Query');
-                else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')', 'Query');
+                if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.update(...)');
+                else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')');
             }
             this.collections[object.options.name].update(
                 updateOn,
@@ -103,17 +106,17 @@ this.MongoDatasource = new Class({
                         if(errorCallback) errorCallback(err);
                     } else {
                         if(Protolus.verbose){
-                            if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.update(...)', 'Query');
-                            else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')', 'Query');
+                            if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.update(...)');
+                            else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')');
                         }
-                        callback(object.data);
+                        callback(object.data, {});
                     }
                 }.bind(this));
         }else{
             var inserted = Object.clone(object.data);
             if(Protolus.verbose){
                 if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.insert(...)', 'Query');
-                else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.insert('+JSON.encode(inserted)+')', 'Query');
+                else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.insert('+JSON.encode(inserted)+')');
             }
             this.collections[object.options.name].insert(object.data, function(err, data){
                 if( err ){
@@ -122,9 +125,9 @@ this.MongoDatasource = new Class({
                     object.data = data;
                     if(Protolus.verbose){
                         if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.insert(...)', 'Query');
-                        else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.insert('+JSON.encode(inserted)+')', 'Query');
+                        else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.insert('+JSON.encode(inserted)+')');
                     }
-                    callback(data);
+                    callback(data, {});
                 }
             }.bind(this));
         }
@@ -132,10 +135,10 @@ this.MongoDatasource = new Class({
     load : function(object, callback, errorCallback){
         var loadOn = {};
         loadOn[object.primaryKey] = object.get(object.primaryKey, true);
-        this.performSearch(object.options.name, loadOn,function(data) {
+        this.performSearch(object.options.name, loadOn, {},function(data) {
             if(data.length > 0){
                 object.data = data[0];
-                callback(data[0]);
+                callback(data[0], {});
             }else errorCallback();
         }.bind(this), function(err){
             if(errorCallback) errorCallback(err);
@@ -151,10 +154,10 @@ this.MongoDatasource = new Class({
                     if(errorCallback) errorCallback(err);
                 } else {
                     if(Protolus.verbose){
-                        if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA', 'magenta')+'] db.'+object.options.name+'.delete(...)', 'Query');
-                        else console.log('['+AsciiArt.ansiCodes('DATA', 'magenta')+'] db.'+object.options.name+'.delete('+JSON.encode(deleteOn)+')', 'Query');
+                        if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA', 'magenta')+'] db.'+object.options.name+'.delete(...)');
+                        else console.log('['+AsciiArt.ansiCodes('DATA', 'magenta')+'] db.'+object.options.name+'.delete('+JSON.encode(deleteOn)+')');
                     }
-                    if(callback) callback(object.data);
+                    if(callback) callback(object.data, {});
                 }
             }.bind(this)
         );

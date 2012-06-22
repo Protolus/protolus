@@ -23,7 +23,7 @@ this.MySQLDatasource = new Class({
             errorCallback
         );
     },
-    buildPredicate: function(predicate){ // the real where clause builder
+    buildPredicate: function(predicate, options, object){ // the real where clause builder
         var result = [];
         predicate.each(function(item){
             if(typeOf(item) == 'array'){
@@ -46,7 +46,7 @@ this.MySQLDatasource = new Class({
         }.bind(this));
         return result.join(' ');
     },
-    performSearch : function(type, predicate, callback, errorCallback){
+    performSearch : function(type, predicate, options, callback, errorCallback){
         var query = '';
         if(typeOf(predicate) == 'string'){ //raw sql
             query = 'SELECT * FROM '+type+(predicate!=''?' WHERE '+predicate:'');
