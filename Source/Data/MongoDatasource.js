@@ -93,10 +93,9 @@ this.MongoDatasource = new Class({
             var originalPayload = Object.clone(payload)
             var updateOn = {};
             updateOn[object.primaryKey] = object.get(object.primaryKey, true);
-            if(Protolus.verbose){
-                if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.update(...)');
-                else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')');
-            }
+            if(object.permissions) payload['permissions'] = object.permissions;
+            var request = (this.debug?'db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')':'db.'+object.options.name+'.update({...})');
+            if(Protolus.verbose && this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+']'+request);
             this.collections[object.options.name].update(
                 updateOn,
                 payload,
@@ -106,27 +105,21 @@ this.MongoDatasource = new Class({
                         if(errorCallback) errorCallback(err);
                     } else {
                         if(Protolus.verbose){
-                            if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.update(...)');
-                            else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.update('+JSON.encode(updateOn)+', '+JSON.encode(payload)+')');
+                            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('DATA'+(this.debug?' RETURN':''), 'magenta')+'] '+request);
                         }
                         callback(object.data, {});
                     }
                 }.bind(this));
         }else{
             var inserted = Object.clone(object.data);
-            if(Protolus.verbose){
-                if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.insert(...)', 'Query');
-                else console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+'] db.'+object.options.name+'.insert('+JSON.encode(inserted)+')');
-            }
+            var request = (this.debug?'db.'+object.options.name+'.insert('+JSON.encode(inserted)+')':'db.'+object.options.name+'.insert({...})');
+            if(Protolus.verbose && this.debug) console.log('['+AsciiArt.ansiCodes('DATA CALL', 'magenta')+']'+request);
             this.collections[object.options.name].insert(object.data, function(err, data){
                 if( err ){
                     if(errorCallback) errorCallback(err);
                 }else{
                     object.data = data;
-                    if(Protolus.verbose){
-                        if(!this.debug) console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.insert(...)', 'Query');
-                        else console.log('['+AsciiArt.ansiCodes('DATA RETURN', 'magenta')+'] db.'+object.options.name+'.insert('+JSON.encode(inserted)+')');
-                    }
+                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('DATA'+(this.debug?' RETURN':''), 'magenta')+'] '+request);
                     callback(data, {});
                 }
             }.bind(this));

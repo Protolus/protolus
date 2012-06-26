@@ -5,7 +5,7 @@ this.Data = new Class({
     exists : false,
     fields : [],
     virtuals : {},
-    options : {},
+    fieldOptions : {},
     initialize : function(options){
         if(!options.datasource) new Error('Datasource not specified for object!');
         if(!options.name) new Error('Data name not specified for object!');
@@ -34,7 +34,7 @@ this.Data = new Class({
         if(this.virtuals[key] && this.virtuals[key].get){
             return this.virtuals[key].get(key, typed);
         }else if(this.data[key]){
-            if(typed) return this.datasource.getRepresentation(this.options[key]['type'], this.data[key]);
+            if(typed && this.fieldOptions[key] && this.fieldOptions[key]['type']) return this.datasource.getRepresentation(this.fieldOptions[key]['type'], this.data[key]);
             else return this.data[key];
         }
     },
@@ -42,7 +42,7 @@ this.Data = new Class({
         if(this.virtuals[key] && this.virtuals[key].get){
             return this.virtuals[key].type(value);
         }else if(this.data[key]){
-            if(this.options[key] && this.options[key]['type']) return this.datasource.getRepresentation(this.options[key]['type'], value);
+            if(this.fieldOptions[key] && this.fieldOptions[key]['type']) return this.datasource.getRepresentation(this.fieldOptions[key]['type'], value);
             else return value;
         }else return value;
     },
@@ -54,8 +54,8 @@ this.Data = new Class({
         }
     },
     setOption : function(option, key, value){
-        if(!this.options[key]) this.options[key] = {};
-        this.options[key][option] = value;
+        if(!this.fieldOptions[key]) this.fieldOptions[key] = {};
+        this.fieldOptions[key][option] = value;
     },
     virtualSetter : function(key, callback){
         if(!this.virtuals[key]) this.virtuals[key] = {};
@@ -73,7 +73,7 @@ this.Data = new Class({
         if(!this.virtuals[key]) this.virtuals[key] = {};
         this.virtuals[key]['alias'] = value;
         this.virtualGetter(key, function(typed){
-            if(typed && this.options[key]['type']) return this.datasource.getRepresentation(this.options[key]['type'], value);
+            if(typed && this.fieldOptions[key] && this.fieldOptions[key]['type']) return this.datasource.getRepresentation(this.fieldOptions[key]['type'], value);
             return this.get(value);
         }.bind(this));
         this.virtualSetter(key, function(incoming){
@@ -84,14 +84,34 @@ this.Data = new Class({
         }.bind(this));
     },
     load : function(id, callback, errorCallback){
-        this.data[this.primaryKey] = id;
-        return this.datasource.load(this, callback, errorCallback);
+        this.set(this.primaryKey, id);
+        return this.datasource.load(this, function(data){
+            this.exists = true;
+            callback(data);
+        }, errorCallback);
     },
     delete : function(callback, errorCallback){
         return this.datasource.delete(this, callback, errorCallback);
     },
     save : function(callback, errorCallback){
         //if(!this.db) console.log('could not find datasource:'+this.options.datasource, Data.sources);
+        if(this.permissions === true){//create new perms
+            if(this.exists){
+                if(this.progenitor){
+                    this.permissions = this.progenitor.hasPermissions('write', this);
+                }else{
+                    console.log(new Error().stack);
+                    throw('object edited by unknown progenitor');
+                }
+            }else{
+                if(this.progenitor){
+                    this.permissions = this.progenitor.newPermissions();
+                }else{
+                    console.log(new Error().stack);
+                    throw('object created by unknown progenitor');
+                }
+            }
+        }
         return this.datasource.save(this, function(data, info){
             this.data = data;
             if(callback) callback(data, info);
@@ -145,6 +165,122 @@ this.Data.id = function(type){
         
     }
 };
+this.Data.BitMask = new Class({
+    value : null,
+    initialize : function(value, base){
+        if(!base) base = 10;
+        if(value) this.value = parseInt(value, base);
+    },
+    setBit : function(position, value){
+        if(this.getBit(position)){ //it's set
+            if(!value){//clear
+                this.value = (1 << position) ^ this.value;
+            }// else it's already set!
+        }else{ //not set
+            if(value){
+                this.value = (1 << position) | this.value;
+            }// it's already not set!
+        }
+    },
+    getBit : function(position){
+        return !!((1 << position) & this.value);
+    },
+    bits : function(){
+        return this.value.toString(2);
+    }
+});
+this.Data.Owner = new Class({ //an owner is an instance of Data
+    groups : [],
+    id : false,
+    can : function(action, object){
+        if(object.permissions){
+            var mask = new Data.OwnershipMask(object.permissions.mask);
+            if(this.id == object.permissions.owner){ //user
+                return mask.hasPermission('user', action);
+            }else if(this.groups.contains(object.permissions.group)){
+                return mask.hasPermission('group', action);
+            }else{
+                return mask.hasPermission('world', action);
+            }
+        } else return true; //no perms
+    },
+    newPermissions : function(){
+        var owner = this.get(this.primaryKey);
+        return {
+            'owner':owner,
+            'group':this.groups[0],
+            'mask':744
+        }
+    }
+});
+this.Data.OwnershipMask = new Class({
+    Extends : Data.BitMask,
+    contexts : ['user', 'group', 'world'],
+    permissions : ['read', 'write', 'execute'],
+    initialize : function(value){
+        this.parent(value, 8);
+    },
+    getPosition: function(context, permission){
+        var groupIndex = this.contexts.indexOf(context.toLowerCase());
+        if(groupIndex === -1) throw('Unrecognized context('+context+')!');
+        var permissionIndex = this.permissions.indexOf(permission.toLowerCase());
+        if(permissionIndex === -1) throw('Unrecognized permission('+permission+')!');
+        return groupIndex*this.permissions.length + permissionIndex;
+    },
+    hasPermission: function(context, permission){
+        var position = this.getPosition(context, permission);
+        return this.getBit(position);
+    },
+    setPermission: function(context, permission, value){
+        var position = this.getPosition(context, permission);
+        return this.setBit(position, value);
+    },
+    modify: function(clause){
+        var operator = false;
+        var subjects = [];
+        var ch;
+        if(typeOf(clause) == 'number') this.value = clause;
+        for(var lcv=0; lcv < clause.length; lcv++){
+            ch = clause.charAt(lcv);
+            if(operator){
+                var perm;
+                switch(ch){
+                    case 'r':
+                        perm = 'read';
+                        break;
+                    case 'w':
+                        perm = 'write';
+                        break;
+                    case 'x':
+                        perm = 'execute';
+                        break;
+                }
+                subjects.each(function(subject){
+                    var value;
+                    if(operator == '+') value = 1;
+                    if(operator == '-') value = 0;
+                    this.setPermission(subject, perm, value);
+                }.bind(this));
+            }else{
+                switch(ch){
+                    case 'u':
+                        subjects.push('user');
+                        break;
+                    case 'g':
+                        subjects.push('group');
+                        break;
+                    case 'o':
+                        subjects.push('world');
+                        break;
+                    case '+':
+                    case '-':
+                        operator = ch;
+                        break;
+                }
+            }
+        }
+    }
+});
 this.Data.new = function(type){
     try{
         eval('this.lastProtolusObject = new GLOBAL.'+type+'();');

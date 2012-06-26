@@ -25,6 +25,18 @@ Protolus.WebConnection = new Class({
         this.cookies = new System.cookies(request, response);
         this.id = System.uuid.v1();
     },
+    getSession:function(key){
+        if(!this.session) return false;
+        var data = this.session.get('data');
+        return data[key];
+    },
+    setSession:function(key, value){
+        if(!this.session) return false;
+        var data = this.session.get('data');
+        if(!data) data = {};
+        data[key] = value;
+        this.session.set('data', value);
+    },
     error : function(options, type, callback){
         if(typeOf(options) == 'string') options = {message:options};
         if(typeOf(type) == 'string') options.type = type;
@@ -38,6 +50,7 @@ Protolus.WebConnection = new Class({
         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('COMPLETE', 'yellow')+':'+this.id+']');
         this.respond(options.message, action);
         if(callback) callback(options);
+        if(this.session) this.session.save();
     },
     htmlStatusToCode : function(code){
         switch(code){
@@ -81,6 +94,7 @@ Protolus.WebConnection = new Class({
     respond : function(text){
         this.response.writeHead(200);
         this.response.end(text);
+        if(this.session) this.session.save();
     },
     api : function(){
         this.respond = function(message, code){
@@ -88,6 +102,7 @@ Protolus.WebConnection = new Class({
             code = this.htmlStatusToCode(code);
             this.response.writeHead(code);
             this.response.end(message);
+            if(this.session) this.session.save();
         }.bind(this);
         this.error = function(options, type, callback){
             if(typeOf(options) == 'string') options = {message:options};
@@ -104,6 +119,7 @@ Protolus.WebConnection = new Class({
             if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+options.message);
             this.respond(JSON.encode(response), options.type);
             if(callback) callback(response);
+            if(this.session) this.session.save();
         }
     },
     html : function(){
@@ -112,6 +128,7 @@ Protolus.WebConnection = new Class({
             code = this.htmlStatusToCode(code);
             this.response.writeHead(code);
             this.response.end(message);
+            if(this.session) this.session.save();
         }.bind(this);
         this.error = function(options, type, callback){
             if(typeOf(options) == 'string') options = {message:options};
@@ -128,7 +145,32 @@ Protolus.WebConnection = new Class({
             if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+options.message);
             this.respond(JSON.encode(response), options.type);
             if(callback) callback(response);
+            if(this.session) this.session.save();
         }
+    },
+    setCookie : function(){
+        
+    },
+    getCookie : function(){
+        
+    },
+    addHeader : function(){
+        
+    },
+    setPost : function(){
+        
+    },
+    getPost : function(){
+        
+    },
+    setGet : function(){
+        
+    },
+    getGet : function(){
+        
+    },
+    get : function(){ //the 'global' get
+        
     }
 });
 Protolus.WebApplication = new Class({
@@ -147,18 +189,47 @@ Protolus.WebApplication = new Class({
         this.api = true;
         this.serve(callback);
     },
+    enableSession : function(callback, fail, args, connection){
+        var session_id = connection.cookies.get('session_id') || args.session_id;
+        if(session_id){
+            Data.search('Session', 'session_id=\''+session_id+'\'', function(sessions){
+                console.log(sessions, session_id);
+                if(!sessions.length > 0){
+                    var session = new Session();
+                    session.set('session_id', Data.id('uuid'));
+                    connection.cookies.set('session_id', session.get('session_id'));
+                    session.save(function(){
+                        connection.session = session;
+                        callback(args, connection);
+                    }.bind(this));
+                    return;
+                }else{
+                    connection.session = sessions[0];
+                    var user_id = connection.getSession('user_id');
+                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('RESESSIONING', 'green')+':'+session_id+' => '+session.get('session_id')+']');
+                    if(user_id){
+                        connection.user = new User();
+                        connection.user.load(user_id, function(){
+                            callback(args, connection);
+                        }.bind(this));
+                    }else callback(args, connection);
+                    connection.session_id = session_id;
+                }
+            }.bind(this));
+        }else callback(args, connection);
+    },
     authenticatedAPI : function(callback, fail){
         this.API(function(args, connection){
             if( (!args.api_key) && (!args.api_token) ) return fail(args, connection, 'no_credentials');
             if(args.api_token){
-                Data.search('APIToken', 'token=\''+args.api_token+'\'', function(sessions){
-                    if(sessions.length == 1){
-                        callback(args, connection);
+                Data.search('APIToken', 'token=\''+args.api_token+'\'', function(tokens){
+                    if(tokens.length == 1){
+                        this.enableSession(callback, fail, args, connection);
                         return;
                     }else{
                         return fail(args, connection, 'no_credentials');
                     }
-                },function(err){
+                }.bind(this),function(err){
                     return fail(args, connection, 'no_credentials');
                     throw(err)
                 });
@@ -178,10 +249,10 @@ Protolus.WebApplication = new Class({
                             token.set('verbose', false);
                             token.set('api_key', api_key);
                             token.save(function(){
-                                callback(args, connection);
-                            });
+                                this.enableSession(callback, fail, args, connection);
+                            }.bind(this));
                             connection.cookies.set('api_token', token.get('token'));
-                        },function(){
+                        }.bind(this),function(){
                             if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('TOKEN CREATE FAILED', 'red+blink')+':'+connection.id+']');
                             return fail(args, connection, 'error');
                         });
@@ -190,12 +261,12 @@ Protolus.WebApplication = new Class({
                         if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('AUTHENTICATION FAILED', 'red+blink')+':'+connection.id+']');
                         return fail(args, connection, 'invalid_key');
                     }
-                },
+                }.bind(this),
                 function(){
                 });
                 //todo log if keys are ever > 1
             }
-        })
+        }.bind(this))
     },
     serve : function(callback){
         var finish = callback;
@@ -240,29 +311,5 @@ Protolus.WebApplication = new Class({
                 finish(args, connection);
             }
         }.bind(this));
-    },
-    setCookie : function(){
-    
-    },
-    getCookie : function(){
-    
-    },
-    addHeader : function(){
-    
-    },
-    setPost : function(){
-    
-    },
-    getPost : function(){
-    
-    },
-    setGet : function(){
-    
-    },
-    getGet : function(){
-    
-    },
-    get : function(){ //the 'global' get
-    
     }
 });

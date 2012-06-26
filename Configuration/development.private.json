@@ -1,12 +1,15 @@
 {
     "application":{
         "mode" : "debug",
+        "name" : "Demo       API",
+        "figlet_font" : "Doom",
         "cookie_domain": "protolus.dev"
     },
     "DB:database":{
         "type":"mongo",
         "database" : "protolus",
         "host" : "localhost",
+        "debug" : true,
         "session":"true"
     },
     "DB:transactional":{

@@ -2,6 +2,10 @@ this.Datasource = new Class({
     Implements : Options,
     initialize : function(options){
         this.setOptions(options);
+        if(
+            options.debug && 
+            !(typeOf(options.debug) == 'string' && options.debug.toLowerCase() !== 'false')
+        ) this.debug = true; 
         Data.sources[options.name] = this;
     },
     search : function(type, query, options, callback){
@@ -34,6 +38,9 @@ this.Datasource = new Class({
         return this.performSearch(type, predicate, options, (callback || options.onSuccess), (
             options.onFailure || function(err){ console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+JSON.encode(err)); }
         ));
+    },
+    handlePermissions: function(){
+    
     },
     save: function(object, callback){
         return false;

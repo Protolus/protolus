@@ -1,5 +1,6 @@
 new Class({
     Extends : Data,
+    Implements : Data.Owner,
     initialize : function(options){
         if(typeOf(options) == 'string') options = {key:options};
         if(!options) options = {};
@@ -19,6 +20,7 @@ new Class({
             'zip',
             'country'
         ];
+        this.permissions = true;
         this.parent(options);
         if(options.key) this.load(options.key);
     }

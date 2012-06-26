@@ -59,7 +59,8 @@ Protolus.Application = new Class({
             var message = AsciiArt.ansiCodes(text, color);
             return AsciiArt.ansiCodes('[', boxColor)+lpad+message+rpad+AsciiArt.ansiCodes(']', boxColor);
         }
-        AsciiArt.font(Protolus.appName, 'Fonts/Doom', function(text){
+        var name = this.getConfiguration('application.name');
+        AsciiArt.font(name, 'Fonts/Doom', function(text){
             text.split('\n').each(function(line){
                 console.log(AsciiArt.ansiCodes(line, Protolus.appColor));
             });
@@ -92,7 +93,11 @@ Protolus.Application = new Class({
         }.bind(this));
     },
     getConfiguration : function(key){
-        return this.configurations[key];
+        var result = this.configurations;
+        key.split('.').each(function(part){
+            if(result) result = result[part]
+        });
+        return result;
     },
     setConfiguration : function(key, value){
         this.configurations[key] = value;
