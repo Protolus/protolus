@@ -19,16 +19,22 @@ if(!Protolus) var Protolus = {};
 
 // Routes
 Protolus.routes = [];
+Protolus.routes.routesLoaded = false;
 Protolus.route = function(path, callback){
-    if(Protolus.routes.length == 0){
+    if(Protolus.routes.routesLoaded){
         var iniParser = new Midas.OrderedINIParser();
         var myRequest = new Request({
             url: '/App/routes.conf',
             onSuccess: function(data){
-                var ini = iniParser.parse(data, true);
-                Protolus.routes = ini[0].value;
+                try{
+                    var ini = iniParser.parse(data, true);
+                }catch(ex){
+                    console.log('[routes not loaded]');
+                }
+                Protolus.routes = (ini && ini[0] && ini[0].value)?ini[0].value:[];
+                Protolus.routes.routesLoaded = true;
                 Protolus.routes.each(function(value, index){
-                    //Protolus.Panel.exists(path, function(panelExists){
+                    Protolus.Panel.exists(path, function(panelExists){
                         if(Protolus.routes[index].key == '%') Protolus.routes[index].key = '(.*?)'
                         else Protolus.routes[index].key = Protolus.routes[index].key.replace(/\*/g, '(.*?)').replace('#', '([0-9]*?)');
                         Protolus.routes[index].regex = new RegExp('^'+Protolus.routes[index].key+'$');
@@ -38,7 +44,7 @@ Protolus.route = function(path, callback){
                             Protolus.routes[index].value = Protolus.routes[index].value.substring(0, pos)+'$'+(count++)+Protolus.routes[index].value.substring(pos+1);
                             pos = Protolus.routes[index].value.indexOf('*');
                         }
-                    //});
+                    });
                 });
                 Protolus.route(path, callback);
             }
@@ -94,8 +100,9 @@ Protolus.Resource = new Class({
         if(Protolus.resources.components[name] != undefined) return Protolus.resources.components[name];
         else Protolus.resources.components[name] = this;
        // var iniParser = new Midas.OrderedINIParser();
+        var filename = Protolus.resourceDirectory+'/'+name+'/component.json';
         new Request.JSON({
-            url: Protolus.resourceDirectory+'/'+name+'/component.json', 
+            url: filename, 
             async: (!(callback === true)),
             onSuccess: function(data){
                 if(data.resource) data.resource.each(function(file){
@@ -114,7 +121,7 @@ Protolus.Resource = new Class({
                 }
             }.bind(this),
             onFailure: function(data){
-                console.log('RESOURCE ERROR!')
+                console.log('RESOURCE ERROR LOADING : '+name+'!');
             }
         }).send();
     }
@@ -182,10 +189,10 @@ Protolus.requireCSS = function(resource, name, callback){
             
         }
     }else{
-        var count = 0;
+        var count = resource.length;
         var result = '';
         resource.each(function(res){
-            count++;
+            //count++;
             System.file.readFile(res, 'ascii', function(data, err){
                 console.log('dd:'+res);
                 if(err){
@@ -257,21 +264,23 @@ Protolus.requireJS = function(resource, name, callback){
         var result = '';
         resource.each(function(res){
             count++;
-            //console.log('Res:'+res);
+            console.log('['+AsciiArt.ansiCodes('JS', 'green')+']'+res);
             System.file.readFile(res, 'utf8', function(err, data){
                 if(err){
-                    throw('file load error('+res+')!');
+                    console.log((new Error).stack);
+                    throw('file load error('+res.toString()+')!');
                 }
-                result += data;
+                result += data+' //@ sourceURL='+res+"\n";
                 count--;
                 if(count == 0){
                     //if(Protolus.minify) result = Code.minify(result);
-                    //try{
+                    try{
                         eval.apply(GLOBAL, [result]);
-                    //}catch(ex){
-                        //console.log('Error:'+res);
+                    }catch(ex){
+                        console.log('Error('+ex.toString()+'):'+res);
+                        console.log(ex.lineNumber, ex.name, ex.stack);
                         //throw(ex);
-                    //}
+                    }
                     callback();
                 }
             });

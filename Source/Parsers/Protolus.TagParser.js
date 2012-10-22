@@ -24,43 +24,56 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
     literalTags : [],
     unaryTags : [],
     specialTags : {},
+    unrecognized : 'unary',
     initialize: function(options){
         Object.each(options, function(option, name){
             this[name] = option;
         }.bind(this));
         if(typeOf(this.literalTags) == 'string') this.literalTags = this.literalTags.split(',');
         if(typeOf(this.attributeDelimiters) == 'string') this.attributeDelimiters = this.attributeDelimiters.split(',');
-        console.log(['this', this]);
+        //console.log(['this', this]);
     },
     open: function(tag){
-        console.log('open:'+tag.name);
+        this.tagStack.push(tag);
+        //console.log('open:'+tag.name);
     },
     content: function(text){
-        console.log('con:'+text);
+        if(this.tagStack[this.tagStack.length-1]){
+            if(!this.tagStack[this.tagStack.length-1].children) this.tagStack[this.tagStack.length-1].children = [];
+            this.tagStack[this.tagStack.length-1].children.push(text);
+        }
     },
     close: function(tag){
-        console.log('close:'+tag.name);
+        //console.log('close:'+tag.name);
+        var tag = this.tagStack.pop(tag);
+        if(this.tagStack[this.tagStack.length-1]){
+            if(!this.tagStack[this.tagStack.length-1].children) this.tagStack[this.tagStack.length-1].children = [];
+            this.tagStack[this.tagStack.length-1].children.push(tag);
+        }
+        this.lastTag = tag;
     },
     error: function(exception){
         console.log(exception);
     },
     parse: function(xmlChars){
+        var recognizedTags = this.unaryTags.clone().combine(this.literalTags).combine(Object.keys(this.specialTags));
         var tagOpen = false;
         var currentTag = '';
         var content = '';
         var ch;
+        this.tagStack = [{}];
         var tagStack = [];
         var literalMode = false;
         var strictError = 'Strict parse error: Unmatched Tag!';
         for(var lcv = 0; lcv < xmlChars.length; lcv++){
             ch = xmlChars[lcv];
-            console.log(['char', ch]);
+            //console.log(['char', ch]);
             if(tagOpen){
                 if(ch == this.closer){
-                    console.log('closer');
+                    //console.log('closer');
                     var tag = this.parseTag(currentTag);
                     if(tag.name[0] == this.closeEscape){
-                        console.log('close closing tag');
+                        //console.log('close closing('+tag.name.substring(1)+') tag');
                         tag.name = tag.name.substring(1);
                         this.close(tag);
                         var lastTag = tagStack.pop();
@@ -70,11 +83,15 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
                         }
                         literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
                     }else{
-                        console.log('close opening tag');
+                        //console.log('close opening tag');
                         this.open(tag);
                         tagStack.push(tag);
                         literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
-                        if(currentTag[currentTag.length-1] == this.closeEscape || this.unaryTags.contains(tag.name)){
+                        if(
+                            currentTag[currentTag.length-1] == this.closeEscape || 
+                            this.unaryTags.contains(tag.name) ||
+                            (this.unrecognized == 'unary' && !recognizedTags.contains(tag.name))
+                        ){
                             this.close(tag);
                             var lastTag = tagStack.pop();
                             if(this.strict && lastTag.name != tag.name){
@@ -86,21 +103,21 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
                     }
                     tagOpen = false;
                 }else currentTag += ch;
-                console.log('tag char');
+                //console.log('tag char');
             }else{
                 if(!literalMode && ch == this.opener){
-                    console.log('found open');
+                    //console.log('found open');
                     currentTag = '';
                     tagOpen = true;
                     if(content.trim() != '') this.content(content.trim());
                     content = '';
                 }else content += ch;
-                console.log('ch++');
+                //console.log('ch++');
             }
         }
         if(content.trim() != '') this.content(content.trim());
         this.root = lastTag;
-        return lastTag;
+        return this.tagStack.shift();
     },
     parseTag: function(tag){
         var ch;

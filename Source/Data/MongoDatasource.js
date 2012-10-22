@@ -87,7 +87,7 @@ this.MongoDatasource = new Class({
     },
     save : function(object, callback, errorCallback){
         if(!this.collections[object.options.name]) this.collections[object.options.name] = this.connection.collection(object.options.name);
-        if(object.get(object.primaryKey)){
+        if(object.exists){
             var payload = Object.clone(object.data);
             delete payload[object.primaryKey];
             var originalPayload = Object.clone(payload)

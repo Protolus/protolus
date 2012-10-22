@@ -16,7 +16,126 @@ provides: [Protolus.PageRenderer, Protolus.Panel, Protolus.Lib, Protolus.Logger,
 */
 
 if(!Protolus) var Protolus = {};
+if(Protolus.isNode && GLOBAL.System) System = GLOBAL.System;
+Protolus.templateCache = {};
 Protolus.Panel = new Class({
+    Implements : [Events, Options],
+    options : {
+        type : 'Smarty',
+        templateType : 'tpl',
+        dataType : 'js',
+        templateDirectory : '/App/Panels',
+        dataDirectory : '/App/Controllers',
+        dataEndpoint : '/data',
+        dataMode : 'local'
+    },
+    delayed : [],
+    template : null,
+    name : null,
+    dataCache : {},
+    initialize : function(name, options){
+        this.name = name;
+        this.setOptions(options);
+        if(!options || !options.dataEndpoint) this.options.dataEndpoint += '/'+this.name;
+        this.fetchTemplate(function(template){
+            this.template = new Protolus.Template[this.options.type](template);
+            var action;
+            //console.log('ii', this.delayed);
+            while(this.delayed.length > 0){
+                action = this.delayed.pop();
+                this.render(action.data, action.callback);
+            }
+        }.bind(this));
+    },
+    fetchData : function(callback, error){
+        if(this.dataCache[this.name]){
+            //todo: handle out-of-date data
+            callback(this.dataCache[this.name]);
+        }else{
+            if(Protolus.isNode){
+                var name = './App/Controllers/'+this.name+'.controller.js';
+                System.file.readFile(name, function(err, file){
+                    var renderer = this.template;
+                    eval(file.toString());
+                    callback(renderer.data);
+                }.bind(this));
+            }else{
+                (new Request.JSON({
+                    url : '/data/'+this.name,
+                    onSuccess : function(json){
+                        Protolus.Panel.dataCache[this.name] = json;
+                        callback(json);
+                    },
+                    onFailure :function(event){
+                        console.log(['ERROR', event]);
+                    }
+                })).send();
+            }
+        }
+    },
+    fetch : function(file, callback, error){
+        if(Protolus.isNode){
+            System.file.readFile('.'+file, function(err, data){
+                if(err) error(err);
+                else callback(data.toString());
+            });
+        }else{
+            (new Request({
+                url : file,
+                onSuccess : function(data){
+                    callback(data);
+                },
+                onFailure :function(event){
+                    if(error) error(event);
+                }
+            })).send();
+        }
+    },
+    fetchTemplate : function(callback, error){
+        var file = this.options.templateDirectory+'/'+this.name+'.panel.'+this.options.templateType;
+        if(Protolus.templateCache[file]) callback(Protolus.templateCache[file]);
+        else{
+            this.fetch(file, function(data){
+                Protolus.templateCache[file] = data;
+                callback(data);
+            }, function(err){
+                if(error) error(err);
+                console.log('ERROR', err);
+            });
+        }
+    },
+    getData : function(){
+    
+    },
+    /*fetchData : function(callback, error){
+        var file = this.options.dataDirectory+'/'+this.name+'.controller.'+this.options.dataType;
+        if(this.dataCache[file]) callback(this.dataCache[file]);
+        else{
+            this.fetch(file, function(data){
+                if(this.options.dataMode != 'local') data = JSON.parse(data)
+                if(data.cacheable) this.dataCache[file] = data;
+                callback(data);
+            }.bind(this), function(err){
+                if(error) error(err);
+            });
+        }
+    },*/
+    render : function(data, callback){
+        if(typeOf(data) == 'function' && !callback){
+            this.fetchData(function(fetchedData){
+                //console.log('DDTT', data);
+                this.render(fetchedData, data); 
+            }.bind(this));
+            return;
+        }
+        if(this.template) this.template.render(data, callback);
+        else this.delayed.push({data:data,callback:callback});
+    }
+});
+
+//The older, Midas based panels
+
+/*Protolus.Panel = new Class({
     Extends : Midas.Smarty,
     template_location : '/App/Panels/',
     compile_location : '',
@@ -173,16 +292,37 @@ Protolus.Panel = new Class({
             //todo: handle out-of-date data
             callback(Protolus.Panel.dataCache[this.name]);
         }else{
-            (new Request.JSON({
-                url : '/data/'+this.name,
-                onSuccess : function(json){
-                    Protolus.Panel.dataCache[this.name] = json;
-                    callback(json);
-                },
-                onFailure :function(event){
-                    console.log(['ERROR', event]);
-                }
-            })).send();
+            if(Protolus.isNode){
+                var name = './App/Controllers/'+this.name+'.controller.js';
+                System.file.readFile(name, function(err, file){
+                    if(err) console.log('error loading file:', err, name);
+                    else{
+                        var renderer = (function(){
+                            this.data = {};
+                            this.get = function(key){
+                                return this.data[key];
+                            };
+                            this.set = function(key, value){
+                                this.data[key] = value;
+                            };
+                            return this;
+                        })();
+                        eval(file.toString());
+                        callback(renderer.data);
+                    }
+                });
+            }else{
+                (new Request.JSON({
+                    url : '/data/'+this.name,
+                    onSuccess : function(json){
+                        Protolus.Panel.dataCache[this.name] = json;
+                        callback(json);
+                    },
+                    onFailure :function(event){
+                        console.log(['ERROR', event]);
+                    }
+                })).send();
+            }
         }
     },
     render : function(data, callback){
@@ -224,7 +364,7 @@ Protolus.Panel = new Class({
     render_date : function(timestamp, format){
        return Protolus.Panel.date(timestamp, format);
     }
-});
+});*/
 Protolus.Panel.renderCounts = {};
 Protolus.Panel.count = function(panel){
     if(!Protolus.Panel.renderCounts[panel]) Protolus.Panel.renderCounts[panel] = 0;
@@ -233,9 +373,16 @@ Protolus.Panel.count = function(panel){
 Protolus.Panel.exists = function(panel, callback){
     var routedPanel = panel;
     routedPanel = Protolus.consumeGetParameters(routedPanel);
-    var result = (Protolus.templateLocation+routedPanel+'.'+Protolus.panelExtension).existsAsURL();
-    if(callback) callback(result);
-    return result;
+    var path = (Protolus.templateLocation+routedPanel+'.'+Protolus.panelExtension);
+    if(Protolus.isNode){
+        System.file.exists('.'+path, function(exists){
+            if(callback) callback(exists);
+        });
+    }else{
+        var result = path.existsAsURL();
+        if(callback) callback(result);
+    }
+    //return result;
 };
 Protolus.Panel.dataCache = {};
 //perhaps something that should be static

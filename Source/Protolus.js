@@ -24,12 +24,14 @@ Protolus.classExists = function(classname) {
 Protolus.isNumeric = function(value){
     return (!isNaN(value * 1)) || value.match(/^[0-9][0-9a-f]*$/);
 };
+//*
 Protolus.require = function(module, callback){
-    if(!Protolus.resources) Protolus.resourceLoader(Protolus.resourceDirectory);
+    //if(!Protolus.resources) Protolus.resourceLoader(Protolus.resourceDirectory);
     if(typeOf(module) == 'array'){
         if(module.length == 0) callback();
         else{
             thisModule = module.shift();
+            console.log('['+AsciiArt.ansiCodes('RESOURCE', 'green')+']['+thisModule+']');
             new Protolus.Resource(thisModule, function(){
                 Protolus.require(module, callback);
             });
@@ -37,7 +39,7 @@ Protolus.require = function(module, callback){
     }else{
         new Protolus.Resource(module, callback);
     }
-};
+}; //*/
 if(Protolus.node){
     Protolus.createServer = function(options){ //options currently unused
         var url = require('url');

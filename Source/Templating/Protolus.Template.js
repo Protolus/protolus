@@ -14,32 +14,83 @@ provides: [Protolus.Template, Protolus.Template.Node]
 ...
 */
 Protolus.Template = new Class({
-    Extends : Protolus.TagParser,
+    //Extends : Protolus.TagParser,
+    initialize: function(text, options){
+    },
+    render : function(data, callback){
+        return this.root.render();
+    }
+    
+});
+Protolus.TemplateData = new Class({
+    data : {},
+    set: function(key, value){
+        var accessor = 'this.data';
+        var parts = key.split('.')
+        var current = this.data;
+        var part;
+        while(parts.length > 0){
+            part = parts.pop();
+            accessor += '[\''+part+'\']';
+            try{
+                eval('if(!'+accessor+'){ '+accessor+' = {};}');
+            }catch(error){}
+        }
+        eval(accessor+' = value;');
+        current;
+    },
+    get : function(key){
+        var parts = key.split('.')
+        var current = this.data;
+        while(parts.length > 0){
+            current = current[parts.pop()];
+        }
+        return current;
+    }
+    
+});//*/
+Protolus.TagTemplate = new Class({
+    Extends : Protolus.Template,
     parsedTemplate : null,
     tagRegistry : null,
     tagStack : [],
     root : null,
     initialize: function(text, options){
+        this.parser = new Protolus.TagParser(options);
+        this.parser.strict = false;
         this.tagRegistry = new Protolus.Registry();
         this.parent(options);
         this.root = new Protolus.Template.RootNode();
         this.tagStack.push(this.root);
-        this.parsedTemplate = this.parse(text);
-        console.log(['template', this.parsedTemplate]);
+        this.parsedTemplate = this.parser.parse(text);
     },
-    open: function(tag){
-        console.log('open:'+tag.name);
-        if(!this.tagRegistry[tag.name]) throw('Unkown tag('+tag.name+')');
-        this.tagStack.push(new new Protolus.Template.GenericNode(this.tagRegistry[tag.name](tag.name, tag.attributes)));
-    },
-    content: function(text){
-        this.tagStack[this.tagStack.length-1].addChild(new Protolus.Template.TextNode(text));
-    },
-    close: function(tag){
-        this.tagStack.pop();
+    renderNode : function(node){
+        if(typeOf(node) == 'string'){
+            return node;
+        }else{
+            switch(node.name){
+                case 'foreach':
+                    return '[FOR]';
+                    break;
+                case 'if':
+                    return '[IF]';
+                    break;
+                //case '':
+                    //break;
+                default :
+                    if(node.name.substring(0,1) == '$'){
+                        return '[VAR]';
+                        break;
+                    }
+            }
+        }
     },
     render : function(data, callback){
-        return this.root.render();
+        var result = '';
+        this.parsedTemplate.children.each(function(node){
+            result += this.renderNode(node);
+        }.bind(this));
+        callback(result);
     }
     
 });
@@ -76,6 +127,7 @@ Protolus.Template.Node = new Class({ //basically an XML Node
 });
 Protolus.Template.TextNode = new Class({
     Extends: Protolus.Template.Node,
+    children : [],
     render: function(){
         return this.content;
     }
@@ -98,6 +150,9 @@ Protolus.Template.GenericNode = new Class({
     renderFunction : null,
     initialize : function(name, attributes, renderFunction){
         this.parent(name, attributes);
+        if(!renderFunction) this.renderFunction = function(){
+            return '[o]';
+        };
         this.renderFunction = renderFunction;
     },
     render: function(){

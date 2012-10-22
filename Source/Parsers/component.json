@@ -1,0 +1,9 @@
+{
+    "resource" :[
+        "Protolus.TagParser.js",
+        "Protolus.HTMLParser.js"
+    ],
+    "dependency":[
+        "protolus_init"
+    ]
+}

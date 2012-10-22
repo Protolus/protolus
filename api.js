@@ -9,7 +9,7 @@ Protolus.resourceDirectory = __dirname+'/Source';
 Protolus.configurationDirectory = __dirname+'/Configuration';
 Protolus.classDirectory = __dirname+'/Classes';
 
-Protolus.appName = 'Demo    API';
+Protolus.appName = 'ffff';
 Protolus.appPort = 77777;
 
 Protolus.bootstrap({
@@ -25,6 +25,7 @@ var passwordHash = function(password){
 Protolus.require(
     [ 'Extensions', 'Core', 'Web'], function(){
         application = new Protolus.WebApplication( { data : true }, function(){
+            //Protolus.appName = 'Demo    API';
             Protolus.loadClass('APIKey');
             Protolus.loadClass('APIToken');
             Protolus.loadClass('Session');

@@ -1,0 +1,9 @@
+{
+    "resource" :[
+        "Protolus.Template.js",
+        "Protolus.Template.Smarty.js"
+    ],
+    "dependency":[
+        "protolus_init"
+    ]
+}

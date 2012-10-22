@@ -2,6 +2,9 @@
     "application":{
         "mode" : "debug",
         "cookie_domain": "protolus.dev",
+        "figlet_font" : "Doom",
+        "name" : "Protolus Demo",
+        "port" : ""
     },
     "DB:database":{
         "type":"mysql",

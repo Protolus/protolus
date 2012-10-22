@@ -32,17 +32,24 @@ Protolus.Application = new Class({
         if(Protolus.isNode) this.mode = 'private';
         this.environment = this.getEnvironment('PROTOLUS_MACHINE_TYPE') || 'production';
         if(this.options.data){
-            this.loadConfiguration(Protolus.configurationDirectory+'/'+this.environment+'.'+this.mode+'.json', function(){
-                this.enableData(callback);
-            }.bind(this));
+            this.loadConfiguration(
+                Protolus.configurationDirectory+'/'+this.environment+'.'+this.mode+'.json', 
+                function(){
+                    this.enableData(callback);
+                }.bind(this)
+            );
         }
     },
     loadConfiguration : function(file, callback){
         if(Protolus.isNode){
             System.file.readFile(file,'utf8', function(err, data){
-                var config = JSON.parse(data);
-                this.configurations = config;
-                callback(config);
+                try{
+                    var config = JSON.parse(data);
+                    this.configurations = config;
+                    callback(config);
+                }catch(ex){
+                    console.log('[config \''+file+'\' not loaded]');
+                }
             }.bind(this));
         }else{
             //todo
@@ -59,8 +66,9 @@ Protolus.Application = new Class({
             var message = AsciiArt.ansiCodes(text, color);
             return AsciiArt.ansiCodes('[', boxColor)+lpad+message+rpad+AsciiArt.ansiCodes(']', boxColor);
         }
-        var name = this.getConfiguration('application.name');
-        AsciiArt.font(name, 'Fonts/Doom', function(text){
+        var name = this.getConfiguration('application.name')
+        var font = this.getConfiguration('application.figlet_font');
+        AsciiArt.font(name, 'Fonts/'+font, function(text){
             text.split('\n').each(function(line){
                 console.log(AsciiArt.ansiCodes(line, Protolus.appColor));
             });

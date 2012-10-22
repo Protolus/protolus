@@ -59,13 +59,13 @@ Protolus.transition = function(options){
     for(key in options) transitionOptions[key] = options;
     if(typeof(transitionOptions.transition) == 'string') eval('transitionOptions.transition = '+transitionOptions.transition);
     return transitionOptions;
-}
+};
 Protolus.reverseTransition = function(transition){
     //todo: implement
 };
 Protolus.sharedBaseDirectory = function(paths){
     return paths.commonBase('/');
-}
+};
 Protolus.currentLocation = function(){
     if(window.location.hash){
         panel = window.location.hash.substr(1);
@@ -79,7 +79,7 @@ Protolus.currentLocation = function(){
     //pull off a trailing slash if there is one
     if(panel.substr(panel.length-1, 1) == '/') panel = panel.substr(0, panel.length-1);
     return panel;
-}
+};
 Protolus.currentPanel = function(callback){
     var panel = Protolus.currentLocation();
     Protolus.route(panel, function(routedPanel){

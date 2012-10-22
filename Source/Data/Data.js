@@ -88,7 +88,7 @@ this.Data = new Class({
         return this.datasource.load(this, function(data){
             this.exists = true;
             callback(data);
-        }, errorCallback);
+        }.bind(this), errorCallback);
     },
     delete : function(callback, errorCallback){
         return this.datasource.delete(this, callback, errorCallback);
@@ -98,7 +98,7 @@ this.Data = new Class({
         if(this.permissions === true){//create new perms
             if(this.exists){
                 if(this.progenitor){
-                    this.permissions = this.progenitor.hasPermissions('write', this);
+                    this.permissions = this.progenitor.can('write', this);
                 }else{
                     console.log(new Error().stack);
                     throw('object edited by unknown progenitor');
@@ -193,7 +193,7 @@ this.Data.Owner = new Class({ //an owner is an instance of Data
     groups : [],
     id : false,
     can : function(action, object){
-        if(object.permissions){
+        if(object.permissions){ //todo: these should cascade
             var mask = new Data.OwnershipMask(object.permissions.mask);
             if(this.id == object.permissions.owner){ //user
                 return mask.hasPermission('user', action);

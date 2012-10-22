@@ -28,6 +28,7 @@ Protolus.WebConnection = new Class({
     getSession:function(key){
         if(!this.session) return false;
         var data = this.session.get('data');
+        if(!data) return;
         return data[key];
     },
     setSession:function(key, value){
@@ -143,7 +144,8 @@ Protolus.WebConnection = new Class({
             if(options.message) response.message = options.message;
             response.code = this.htmlStatusToCode(options.type);
             if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('⚠ ERROR', 'red+blink')+']:'+options.message);
-            this.respond(JSON.encode(response), options.type);
+            //todo: hardcoded error page
+            this.respond(response.message, options.type);
             if(callback) callback(response);
             if(this.session) this.session.save();
         }
@@ -169,10 +171,10 @@ Protolus.WebConnection = new Class({
     getGet : function(){
         
     },
-    get : function(){ //the 'global' get
+    'get' : function(){ //the 'global' get
         
     }
-});
+}); //*/
 Protolus.WebApplication = new Class({
     Extends : Protolus.Application,
     Implements : Protolus.Session,
@@ -191,10 +193,12 @@ Protolus.WebApplication = new Class({
     },
     enableSession : function(callback, fail, args, connection){
         var session_id = connection.cookies.get('session_id') || args.session_id;
+        console.log('args', args, connection.cookies);
         if(session_id){
             Data.search('Session', 'session_id=\''+session_id+'\'', function(sessions){
                 console.log(sessions, session_id);
                 if(!sessions.length > 0){
+                    console.log('new session');
                     var session = new Session();
                     session.set('session_id', Data.id('uuid'));
                     connection.cookies.set('session_id', session.get('session_id'));
@@ -206,7 +210,7 @@ Protolus.WebApplication = new Class({
                 }else{
                     connection.session = sessions[0];
                     var user_id = connection.getSession('user_id');
-                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('RESESSIONING', 'green')+':'+session_id+' => '+session.get('session_id')+']');
+                    if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('RESESSIONING', 'green')+':'+session_id+' => '+connection.session.get('session_id')+']');
                     if(user_id){
                         connection.user = new User();
                         connection.user.load(user_id, function(){
@@ -268,11 +272,18 @@ Protolus.WebApplication = new Class({
             }
         }.bind(this))
     },
+    panelRenderer : function(callback, fail){
+        Protolus.addEvent('web', function (request, response) {
+            var finish = callback;
+            var connection = new Protolus.WebConnection(request, response);
+            console.log('connection', request);
+        });
+    },
     serve : function(callback){
         var finish = callback;
-        var connection
+        //var connection
         Protolus.addEvent('web', function (request, response) {
-            connection = new Protolus.WebConnection(request, response);
+            var connection = new Protolus.WebConnection(request, response);
             if(this.api) connection.api();
             if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('CONNECT', 'yellow')+':'+connection.id+']');
             //var crypto = require('crypto');
