@@ -1,5 +1,6 @@
 renderer.set('test', 'something');
-renderer.set('thing', ['a', 'b', 'c']);
+renderer.set('something', 'wicked');
+renderer.set('thing', ['e', 'r', 'c']);
 renderer.set('foo', {
     'bar' : false,
     'fighters' : false,

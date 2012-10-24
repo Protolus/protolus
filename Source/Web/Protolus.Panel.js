@@ -23,11 +23,13 @@ Protolus.Panel = new Class({
     options : {
         type : 'Smarty',
         templateType : 'tpl',
+        templateMode : 'panel',
         dataType : 'js',
         templateDirectory : '/App/Panels',
         dataDirectory : '/App/Controllers',
         dataEndpoint : '/data',
-        dataMode : 'local'
+        dataMode : 'local',
+        wrapperSet : function(){}
     },
     delayed : [],
     template : null,
@@ -38,9 +40,11 @@ Protolus.Panel = new Class({
         this.setOptions(options);
         if(!options || !options.dataEndpoint) this.options.dataEndpoint += '/'+this.name;
         this.fetchTemplate(function(template){
-            this.template = new Protolus.Template[this.options.type](template);
+            this.template = new Protolus.Template[this.options.type](template, {wrapperSet:this.options.wrapperSet});
+            this.template.setData = function(data){
+                this.data = data;
+            };
             var action;
-            //console.log('ii', this.delayed);
             while(this.delayed.length > 0){
                 action = this.delayed.pop();
                 this.render(action.data, action.callback);
@@ -48,6 +52,13 @@ Protolus.Panel = new Class({
         }.bind(this));
     },
     fetchData : function(callback, error){
+        if(Protolus.isNode && !callback){ //synchronous call
+            var name = './App/Controllers/'+this.name+'.controller.js';
+            var file = System.file.readFileSync(name);
+            var renderer = this.template;
+            eval(file.toString());
+            return renderer.data;
+        }
         if(this.dataCache[this.name]){
             //todo: handle out-of-date data
             callback(this.dataCache[this.name]);
@@ -92,7 +103,7 @@ Protolus.Panel = new Class({
         }
     },
     fetchTemplate : function(callback, error){
-        var file = this.options.templateDirectory+'/'+this.name+'.panel.'+this.options.templateType;
+        var file = this.options.templateDirectory+'/'+this.name+'.'+this.options.templateMode+'.'+this.options.templateType;
         if(Protolus.templateCache[file]) callback(Protolus.templateCache[file]);
         else{
             this.fetch(file, function(data){
@@ -107,29 +118,17 @@ Protolus.Panel = new Class({
     getData : function(){
     
     },
-    /*fetchData : function(callback, error){
-        var file = this.options.dataDirectory+'/'+this.name+'.controller.'+this.options.dataType;
-        if(this.dataCache[file]) callback(this.dataCache[file]);
-        else{
-            this.fetch(file, function(data){
-                if(this.options.dataMode != 'local') data = JSON.parse(data)
-                if(data.cacheable) this.dataCache[file] = data;
-                callback(data);
-            }.bind(this), function(err){
-                if(error) error(err);
-            });
-        }
-    },*/
     render : function(data, callback){
         if(typeOf(data) == 'function' && !callback){
             this.fetchData(function(fetchedData){
-                //console.log('DDTT', data);
                 this.render(fetchedData, data); 
             }.bind(this));
             return;
         }
-        if(this.template) this.template.render(data, callback);
-        else this.delayed.push({data:data,callback:callback});
+        if(this.template){
+            this.template.setData(data);
+            this.template.render(data, callback);
+        }else this.delayed.push({data:data,callback:callback});
     }
 });
 

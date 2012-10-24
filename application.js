@@ -59,7 +59,10 @@ Protolus.require(
                     Protolus.route(path, function(routedPath){
                         Protolus.Panel.exists(path, function(panelExists){
                             if(panelExists){
-                                var panel = new Protolus.Panel(path);
+                                Protolus.PageRenderer.renderPage(path, function(html){
+                                    connection.respond(html);
+                                });
+                                /*var panel = new Protolus.Panel(path);
                                 panel.render(function(result){
                                     //console.log('rendered', result);
                                     connection.respond(result);

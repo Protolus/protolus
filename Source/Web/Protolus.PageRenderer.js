@@ -91,6 +91,30 @@ Protolus.PageRenderer = {
             window.location.reload(); // we might just be changing the hash
         }
     },
+    renderPage : function(panelName, callback){
+        var anchor = {};
+        var panel = new Protolus.Panel(panelName, {
+            wrapperSet : function(newWrapper){
+                anchor.wrapper = newWrapper;
+            }
+        });
+        panel.render(function(content){
+            if(!anchor.wrapper){
+                console.log('immediate', content);
+                callback(content);
+                return;
+            }
+            var wrapper = new Protolus.Panel(anchor.wrapper, {
+                templateMode : 'wrapper'
+            });
+            var data = {
+                content : content
+            };
+            wrapper.render(data, function(wrappedContent){
+                callback(wrappedContent);
+            });
+        });
+    },
     render: function(template, data, target, attrs){
         Protolus.PageRenderer.time = (new Date()).getTime();
         Protolus.PageRenderer.oldPanel = Protolus.PageRenderer.panel;

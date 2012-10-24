@@ -16,7 +16,10 @@ provides: [Midas.Smarty]
 Protolus.Template.Smarty = new Class({
     Extends : Protolus.TagTemplate,
     Implements : [Protolus.TemplateData],
-    initialize: function(text){
+    parent : false,
+    targets : {},
+    initialize: function(text, options){
+        this.options = options;
         this.parent(text, {
             strict : true,
             opener : '{',
@@ -54,16 +57,58 @@ Protolus.Template.Smarty = new Class({
                     if(!key) key = 'key';
                     if(from.substring(0,1) == '$') from = from.substring(1);
                     from = this.getVariable(from);
-                    from.each(function(value, index){
+                    var func = function(value, index){
                         this.set(key, index);
                         this.set(item, value);
                         node.children.each(function(child){
                             res += this.renderNode(child);
                         }.bind(this));
-                    }.bind(this));
+                    }.bind(this);
+                    if(typeOf(from) == 'object') Object.each(from, func);
+                    else from.each(func);
                     return res;
                     break;
+                case 'page':
+                    if(node.attributes.wrapper && this.options.wrapperSet){
+                        this.options.wrapperSet(node.attributes.wrapper);
+                    };
+                    return '';
+                    break;
+                case 'require':
+                    var rootPanel = this.getRoot();
+                    if(!node.attributes.name) throw('panel macro requires \'name\' attribute');
+                    if(!node.attributes.mode) node.attributes.mode = 'targeted';
+                    if(!node.attributes.target) node.attributes.target = 'HEAD';
+                    else node.attributes.target = node.attributes.target.toUpperCase();
+                    if(!rootPanel.targets[node.attributes.target]) rootPanel.targets[node.attributes.target] = [];
+                    var resources = node.attributes.name.split(',');
+                    resource.each(function(resourceName){
+                        if(!rootPanel.targets[node.attributes.target].contains(resourceName)){
+                            var res = new Protolus.Resource(resourceName, function(){
+                                rootPanel.targets[node.attributes.target].push(res);
+                                //todo: async signalling?
+                            });
+                        }
+                    });
+                    rootPanel.targets[node.attributes.target].push();
+                    //modes: targeted(d), inline
+                    return '';
+                    break;
+                case 'panel':
+                    var res = '';
+                    if(!node.attributes.name) throw('panel macro requires \'name\' attribute');
+                    var subpanel = new Protolus.Panel(node.attributes.name);
+                    subpanel.parent = this;
+                    var id = this.async(); //this indirection makes me uncomfortable
+                    subpanel.render(function(panel){
+                        this.processReturn(id, panel);
+                    }.bind(this));
+                    return id;
+                    break;
                 case 'if':
+                    var res = '';
+                    node.clause = node.full.substring(2).trim();
+                    var conditionResult = this.evaluateSmartyPHPHybridBooleanExpression(node.clause);
                     var blocks = {'if':[]};
                     node.children.each(function(child){
                         if(blocks['else'] !== undefined){
@@ -75,9 +120,17 @@ Protolus.Template.Smarty = new Class({
                             }
                             blocks['if'].push(child);
                         }
-                        res += this.renderNode(child);
                     }.bind(this));
-                    return '[IF]';
+                    if(conditionResult){
+                        blocks['if'].each(function(child){
+                            res += this.renderNode(child);
+                        }.bind(this));
+                    }else if(blocks['else']){
+                        blocks['else'].each(function(child){
+                            res += this.renderNode(child);
+                        }.bind(this));
+                    }
+                    return res;
                     break;
                 //case '':
                     //break;
@@ -88,9 +141,138 @@ Protolus.Template.Smarty = new Class({
             }
         }
     },
+    getRoot : function(){
+        if(!this.parent) return this;
+        else return this.parent.root();
+    },
     getVariable : function(variable){
         return this.get(variable);
-    }//*/
+    },
+    evaluateSmartyPHPHybridBooleanExpression : function(expression){
+        //var pattern = /[Ii][Ff] +(\$[A-Za-z][A-Za-z0-9.]*) *$/s;
+        expression = expression.trim();
+        if(expression.toLowerCase().substring(0, 2) == 'if'){
+            //todo: multilevel
+            expression = expression.substring(2).trim();
+            var expressions = expression.split('&&');
+            var value = true;
+            expressions.each(function(exp){
+                value = value && this.evaluateSmartyPHPHybridBooleanExpression(exp);
+            });
+            return value;
+        }else{
+            pattern = new RegExp('(.*)( eq| ne| gt| lt| ge| le|!=|==|>=|<=|<|>)(.*)', 'm');
+            parts = expression.match(pattern);
+            if(parts && parts.length > 3){
+                var varOne = this.evaluateSmartyPHPHybridVariable(parts[1].trim());
+                var varTwo = this.evaluateSmartyPHPHybridVariable(parts[3].trim());
+                var res;
+                switch(parts[2]){
+                    case '==':
+                    case 'eq':
+                        res = (varOne == varTwo);
+                        break;
+                    case '!=':
+                    case 'ne':
+                        res = (varOne != varTwo);
+                        break;
+                    case '>':
+                    case 'gt':
+                        res = (varOne > varTwo);
+                        break;
+                    case '<':
+                    case 'lt':
+                        res = (varOne < varTwo);
+                        break;
+                    case '<=':
+                    case 'le':
+                        res = (varOne <= varTwo);
+                        break;
+                    case '>=':
+                    case 'ge':
+                        res = (varOne >= varTwo);
+                        break;
+                }
+                return res;
+            }else{
+                var res;
+                if( (expression - 0) == expression && expression.length > 0){ //isNumeric?
+                    res = eval(expression);
+                    res = res == 0;
+                }else if(expression == 'true' || expression == 'false'){ //boolean
+                    res = eval(expression);
+                }else{
+                    res = this.evaluateSmartyPHPHybridVariable(expression);
+                    res = (res != null && res != undefined && res != '' && res != false);
+                }
+                return res;
+            }
+        }
+    },
+    evaluateSmartyPHPHybridExpression : function(variableName){ // this decodes a value that may be modified by functions using the '|' separator
+        if(variableName === undefined) return null;
+        var methods = variableName.splitHonoringQuotes('|', ['#']);
+        methods.reverse();
+        //console.log(['expression-methods:', methods]);
+        var accessor = methods.pop();
+        var value = this.evaluateSmartyPHPHybridVariable(accessor);
+        //now that we have the value, we must run it through the function stack we found
+        var method;
+        var params;
+        var old = value;
+        methods.each(function(item, index){
+            params = item.split(':');
+            params.reverse();
+            //console.log(['expression-item:', item]);
+            method = params.pop(); //1st element is
+            if(method == 'default'){
+                if(!value || value == '') value = this.evaluateSmartyPHPHybridVariable(params[0]);
+            }else{
+                value = method.apply(this, params.clone().unshift(value));
+            }
+        });
+        return value;
+    },
+    evaluateSmartyPHPHybridVariable : function(accessor, isConf){
+        if(isConf == 'undefined' || isConf == null) isConf = false;
+        if(!accessor) return '';
+        if(accessor.toLowerCase().startsWith('\'') && accessor.toLowerCase().endsWith('\'')) return accessor.substr(1, accessor.length-2);
+        if(accessor.toLowerCase().startsWith('"') && accessor.toLowerCase().endsWith('"')) return accessor.substr(1, accessor.length-2);
+        if(accessor.toLowerCase().startsWith('$smarty.')) return this.get(accessor.substr(8));
+        if(accessor.startsWith('$')){
+            var acc = accessor.substring(1);
+            return this.get(acc);
+        }
+        if(accessor.startsWith('#') && accessor.endsWith('#')){
+            var cnf = accessor.substr(1, accessor.length-2);
+            return Midas.SmartyLib.evaluateSmartyPHPHybridVariable( cnf , true);
+        }
+        return this.get(accessor);
+        var parts = accessor.split('.');
+        parts.reverse();
+        var currentPart = parts.pop();
+        var currentValue;
+        if(isConf){
+            return this.getConf(accessor);
+            //currentValue = smartyInstance.config[currentPart];
+        }else switch(currentPart){
+            case 'smarty':
+                currentValue = this.data;
+                break;
+            default:
+                currentValue = this.get(currentPart);
+                if(currentValue == 'undefined' ) currentValue = '';
+        }
+        parts.each(function(item, index){
+            if(!currentValue && currentValue !== 0) return;
+            if(currentValue[item] == 'undefined'){
+                currentValue = null;
+            }else{
+                currentValue = currentValue[item];
+            }
+        });
+        return currentValue;
+    }
 });
 Protolus.Template.Smarty.scan = function(){
     Protolus.Template.scan('smarty', Protolus.Template.Smarty);

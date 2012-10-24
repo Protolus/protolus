@@ -14,8 +14,9 @@ provides: [Protolus.Template, Protolus.Template.Node]
 ...
 */
 Protolus.Template = new Class({
-    //Extends : Protolus.TagParser,
+    Implements : [Events, Options],
     initialize: function(text, options){
+        this.setOptions(options);
     },
     render : function(data, callback){
         return this.root.render();
@@ -55,14 +56,18 @@ Protolus.TagTemplate = new Class({
     tagRegistry : null,
     tagStack : [],
     root : null,
+    postProcessReturnCount : 0,
     initialize: function(text, options){
         this.parser = new Protolus.TagParser(options);
         this.parser.strict = false;
         this.tagRegistry = new Protolus.Registry();
         this.parent(options);
-        this.root = new Protolus.Template.RootNode();
-        this.tagStack.push(this.root);
+        //this.root = new Protolus.Template.RootNode();
+        //this.tagStack.push(this.root);
         this.parsedTemplate = this.parser.parse(text);
+    },
+    setData : function(data){
+    
     },
     renderNode : function(node){
         if(typeOf(node) == 'string'){
@@ -85,12 +90,30 @@ Protolus.TagTemplate = new Class({
             }
         }
     },
+    async : function(){
+        this.postProcessReturnCount++;
+        return '{{{'+this.postProcessReturnCount+'}}}';
+    },
+    processReturn : function(id, text){
+        if(id && text){
+            this.rendered = this.rendered.replace(id, text);
+        }
+        this.postProcessReturnCount--;
+        if(this.postProcessReturnCount == 0){
+            this.renderCallback(this.rendered);
+            delete this.renderCallback;
+        }
+    },
     render : function(data, callback){
+        this.setData(data);
         var result = '';
         this.parsedTemplate.children.each(function(node){
             result += this.renderNode(node);
         }.bind(this));
-        callback(result);
+        if(this.postProcessReturnCount > 0){
+            this.renderCallback = callback;
+            this.rendered = result;
+        }else callback(result);
     }
     
 });

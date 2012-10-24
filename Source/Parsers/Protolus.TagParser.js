@@ -170,7 +170,8 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
         if(!tagName) tagName = currentValue;
         return {
             name: tagName,
-            attributes: attributes
+            attributes: attributes,
+            full : tag
         };
     }
 });
