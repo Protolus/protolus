@@ -111,7 +111,23 @@ Protolus.PageRenderer = {
                 content : content
             };
             wrapper.render(data, function(wrappedContent){
-                callback(wrappedContent);
+                if(Object.keys(panel.template.targets).length > 0){
+                Object.each(panel.template.targets, function(resources, key){
+                    var result = '';
+                    var count = 0;
+                    resources.each(function(resource){
+                        count++;
+                        resource.files('js', function(files){
+                            result += files.join("\n");
+                            wrappedContent = wrappedContent.replace('<!--[['+key+']]-->', '<script>'+result+'</scr'+'ipt>');
+                            count--;
+                            if(count == 0){
+                                callback(wrappedContent);
+                            }
+                        });
+                    });
+                });
+                }else callback(wrappedContent);
             });
         });
     },

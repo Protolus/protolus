@@ -79,6 +79,7 @@ Protolus.Application = new Class({
         }.bind(this));
     },
     enableData : function(callback){
+        console.log('['+AsciiArt.ansiCodes('RESOURCE', 'green')+'][Data]');
         Protolus.require('Data', function(){
             var dbs = Object.keysThatBeginWith(this.configurations, 'DB:');
             Object.each(dbs, function(settings, name){

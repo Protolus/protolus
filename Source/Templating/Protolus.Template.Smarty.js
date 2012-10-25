@@ -1,6 +1,6 @@
 /*
 ---
-description: An extensible Smarty Parser in Mootools
+description: An extensible Smarty-style protolus template parser Parser in Mootools
 
 license: MIT-style
 
@@ -82,23 +82,44 @@ Protolus.Template.Smarty = new Class({
                     else node.attributes.target = node.attributes.target.toUpperCase();
                     if(!rootPanel.targets[node.attributes.target]) rootPanel.targets[node.attributes.target] = [];
                     var resources = node.attributes.name.split(',');
-                    resource.each(function(resourceName){
+                    var result = '';
+                    resources.each(function(resourceName){
                         if(!rootPanel.targets[node.attributes.target].contains(resourceName)){
+                            var id;
+                            if(node.attributes.mode != 'targeted'){
+                                if(result == '') result = '<script>';
+                                id = this.async();
+                                result += id;
+                            }else{
+                                this.postProcessReturnCount++;
+                            }
                             var res = new Protolus.Resource(resourceName, function(){
-                                rootPanel.targets[node.attributes.target].push(res);
+                                if(node.attributes.mode == 'targeted'){
+                                    rootPanel.targets[node.attributes.target].push(res);
+                                    this.postProcessReturnCount--;
+                                    if(this.postProcessReturnCount == 0 && this.renderCallback){
+                                        this.renderCallback(this.rendered);
+                                        delete this.renderCallback;
+                                    }
+                                }else{
+                                    res.files('js', function(files){
+                                        this.processReturn(id, files.join("\n"));
+                                    }.bind(this));
+                                }
                                 //todo: async signalling?
-                            });
+                                
+                            }.bind(this), {mode : 'return'});
                         }
-                    });
-                    rootPanel.targets[node.attributes.target].push();
+                    }.bind(this));
+                    if(result != '') result += '</scr'+'ipt>';
                     //modes: targeted(d), inline
-                    return '';
+                    return result;
                     break;
                 case 'panel':
                     var res = '';
                     if(!node.attributes.name) throw('panel macro requires \'name\' attribute');
                     var subpanel = new Protolus.Panel(node.attributes.name);
-                    subpanel.parent = this;
+                    subpanel.progenitor = this;
                     var id = this.async(); //this indirection makes me uncomfortable
                     subpanel.render(function(panel){
                         this.processReturn(id, panel);
@@ -142,8 +163,8 @@ Protolus.Template.Smarty = new Class({
         }
     },
     getRoot : function(){
-        if(!this.parent) return this;
-        else return this.parent.root();
+        if(!this.progenitor) return this;
+        else return this.progenitor.getRoot();
     },
     getVariable : function(variable){
         return this.get(variable);

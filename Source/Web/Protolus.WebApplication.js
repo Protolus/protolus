@@ -294,7 +294,7 @@ Protolus.WebApplication = new Class({
             connection.request.path = path;
             var type = path.lastIndexOf('.')!= -1? path.substring(path.lastIndexOf('.')+1): false;
             connection.request.type = type;
-            if(type) new APIError('incompatible filetype indicated');
+            if(type) connection.error('incompatible filetype indicated');
             //todo: check to see if path matches custom path, if not:
             var parts = uri.pathname.split('/');
             if(parts[parts.length-1] == '') parts.pop();

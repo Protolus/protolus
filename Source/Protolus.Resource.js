@@ -95,10 +95,15 @@ Protolus.Resource = new Class({
     resources : [],
     scriptFiles : [],
     styleFiles : [],
+    files : {},
     loaded : false,
-    initialize : function(name, callback){
-        if(Protolus.resources.components[name] != undefined) return Protolus.resources.components[name];
-        else Protolus.resources.components[name] = this;
+    mode : 'implicit', //'implicit', 'return'
+    initialize : function(name, callback, option){ //todo, integrate callback into options and use normal options
+        if(option && option.mode) this.mode = option.mode;
+        /*if(Protolus.resources.components[name] != undefined){
+            callback.delay(1);
+            return Protolus.resources.components[name];
+        }else Protolus.resources.components[name] = this;*/
        // var iniParser = new Midas.OrderedINIParser();
         var filename = Protolus.resourceDirectory+'/'+name+'/component.json';
         new Request.JSON({
@@ -106,25 +111,57 @@ Protolus.Resource = new Class({
             async: (!(callback === true)),
             onSuccess: function(data){
                 if(data.resource) data.resource.each(function(file){
-                    switch(file.split('.').pop().toLowerCase()){
+                    var type = file.split('.').pop().toLowerCase();
+                    var path = Protolus.resourceDirectory+'/'+name+'/'+file;
+                    if(!this.files[type]) this.files[type] = [];
+                    this.files[type].push(path);
+                    switch(type){
                         case 'js':
-                            this.scriptFiles.push(Protolus.resourceDirectory+'/'+name+'/'+file);
+                            this.scriptFiles.push(path);
                             break;
                         case 'css':
-                            this.styleFiles.push(Protolus.resourceDirectory+'/'+name+'/'+file);
+                            this.styleFiles.push(path);
                             break;
                     }
                 }.bind(this));
-                Protolus.requireJS(this.scriptFiles, name, callback);
-                if(this.styleFiles.length > 0){
-                    Protolus.requireCSS(this.styleFiles, name, callback);
+                if(this.mode == 'implicit'){
+                    Protolus.requireJS(this.scriptFiles, name, callback);
+                    if(this.styleFiles.length > 0){
+                        Protolus.requireCSS(this.styleFiles, name, callback);
+                    }
+                } else{
+                    callback();
                 }
             }.bind(this),
             onFailure: function(data){
                 console.log('RESOURCE ERROR LOADING : '+name+'!');
             }
         }).send();
-    }
+    },
+    files : function(type, callback){
+        var files = [];
+        if(Protolus.isNode){
+            var count = 0;
+            var result = '';
+            this.files[type].each(function(res){
+                count++;
+                System.file.readFile(res, 'utf8', function(err, data){
+                    if(err){
+                        console.log((new Error).stack);
+                        throw('file load error('+res.toString()+')!');
+                    }
+                    files.push(data+' //@ sourceURL='+res+"\n");
+                    count--;
+                    if(count == 0){
+                        callback(files);
+                    }
+                });
+            });
+        }else{
+        
+        }
+    },
+    
 });
 Protolus.requireBundle = function(name, callback){
     var resources = Protolus.loadedResources();

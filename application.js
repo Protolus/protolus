@@ -1,16 +1,18 @@
 #!/usr/bin/node
+//class definitions may be global, instances should not be, with the exception of some caching
 GLOBAL.mysql = require("mysql");
 GLOBAL.mongo = require("mongojs");
 GLOBAL.amqp = require("amqp");
 require('AsciiArt').apply(GLOBAL);
 require('Protolus.Bootstrap').apply(GLOBAL);
 
+
 Protolus.resourceDirectory = __dirname+'/Source';
 Protolus.configurationDirectory = __dirname+'/Configuration';
 Protolus.classDirectory = __dirname+'/Classes';
 
 Protolus.appName = 'Demo    API';
-Protolus.appPort = 77777;
+Protolus.appPort = 800;
 
 Protolus.bootstrap({
     console : true
@@ -62,18 +64,6 @@ Protolus.require(
                                 Protolus.PageRenderer.renderPage(path, function(html){
                                     connection.respond(html);
                                 });
-                                /*var panel = new Protolus.Panel(path);
-                                panel.render(function(result){
-                                    //console.log('rendered', result);
-                                    connection.respond(result);
-                                });
-                                /*console.log('EXXST', panelExists);
-                                var template = new Protolus.Template.Smarty(path);
-                                template.render(function(rendered){
-                                    console.log('REN', rendered);
-                                });*/
-                               // connection.respond('This panel exists');
-                                //todo: render
                             }else{
                                 errorFunction(connection, 'This panel does not exist', 404);
                             }
