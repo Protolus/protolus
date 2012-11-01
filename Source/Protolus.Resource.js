@@ -299,25 +299,27 @@ Protolus.requireJS = function(resource, name, callback){
     }else{
         var count = 0;
         var result = '';
+        var ress = [];
         resource.each(function(res){
             count++;
             console.log('['+AsciiArt.ansiCodes('JS', 'green')+']'+res);
+            var localCount = count;
             System.file.readFile(res, 'utf8', function(err, data){
                 if(err){
                     console.log((new Error).stack);
                     throw('file load error('+res.toString()+')!');
                 }
-                result += data+' //@ sourceURL='+res+"\n";
+                ress[localCount] = data+' //@ sourceURL='+res+"\n";
                 count--;
                 if(count == 0){
-                    //if(Protolus.minify) result = Code.minify(result);
+                    result = ress.join("\n");
                     try{
                         eval.apply(GLOBAL, [result]);
                     }catch(ex){
                         console.log('Error('+ex.toString()+'):'+res);
                         console.log(ex.lineNumber, ex.name, ex.stack);
-                        //throw(ex);
                     }
+                    //console.log('ddd', ress);
                     callback();
                 }
             });
