@@ -20,14 +20,14 @@ The templates started as an experiment to validate recursive smarty rendering in
 
 The template itself is an HTML file using a set of macro tags optionally coupled with a controller
 ###Macros
-1.     __page__
+1. **page**
 This is where we set the main data for the page macro, and should be set on the entry panel of all requests (rather than us manually setting them in the controller, and thus obfuscating it from the GUI layer).
     1. title : this is the actual title tag content
     2. heading: page heading, used as a subsection label, but can be used for most anything.
     3. meta: text for the meta tag
     4. wrapper: this is the wrapper that we will render the page inside of
             
-2.     __panel__
+2. **panel**
     This is where a subpanel is rendered as well as a test is defined. In order to render a panel:
         
         {panel name="path/relative/to/panel/root"}
@@ -43,7 +43,7 @@ This is where we set the main data for the page macro, and should be set on the 
     convert also allows you an additional 'drop' parameter that gives you a little flexibility on how the conversion happens:
             1. timer(<seconds>) prevents the conversion from firing until the user has persisted on the view for the specified interval.
         
-3.     __value__
+3. **value**
     Any value can be be output in the form:
         
         {$var}
@@ -52,7 +52,7 @@ This is where we set the main data for the page macro, and should be set on the 
         
         {$var.subvalue}
         
-4.     __if__
+4. **if**
     the if construct allows you to conditionally execute logic, for example:
             
         {if $hasItem}
@@ -66,7 +66,7 @@ This is where we set the main data for the page macro, and should be set on the 
         {else}
             <!--show 'no data' state-->
         {/if}
-5.     __foreach__
+5. **foreach**
     You can iterate across a collection using the foreach macro which supports 3 attributes
     1. from : the object or array we are iterating over
     2. item : the variable name we store the current iteration's value in
