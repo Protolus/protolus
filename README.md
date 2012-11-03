@@ -143,17 +143,17 @@ You would use this class like this:
     
 And you would search for a set using:
 
-    Data::search('RedLectroid', "institutionalized == true");
+    Data.search('RedLectroid', "institutionalized == true");
     
 or if you only wanted the data payload (not a set of objects)
 
-    Data::query('RedLectroid', "institutionalized == true");
+    Data.query('RedLectroid', "institutionalized == true");
     
 One thing to note: This data layer is designed to discourage both streaming data sets and joins. If you need these features or you find this level of indirection uncomfortable you should probably manipulate the DB directly and skip the whole data layer (or even better, interface with an API). 
 
 Other Datasource specific features (for example MapReduce under mongo) must be accessed from the DB driver which may be accessed directly:
 
-    Datasource::get('myAwesomeDatasource').connection;
+    Datasource.get('myAwesomeDatasource').connection;
 
 But when you do this you are circumventing the data layer (other than letting protolus negotiate the connection for you).
     
@@ -191,6 +191,7 @@ Configuration
 This JSON file controls application settings
 
 Built in settings are:
+
 1. **application.mode** : the run mode, currently affecting only the volume of application output ('debug', 'production')
 2. **application.cookie_domain** : set the cookie domain for the app
 3. **application.figlet_font** At certain points, protolus may attempt to output things in using a figlet font (Ascii Art), this allows you to control that, just make sure the .
