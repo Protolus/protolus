@@ -55,8 +55,8 @@ This is where we set the main data for the page macro, and should be set on the 
 4. **if**
     the if construct allows you to conditionally execute logic, for example:
             
-        {if $hasItem}
-            <!--iterate over list-->
+        {if $bobMckenzieIsDirecting}
+            <!--Act!-->
         {/if}
             
     it also supports else clauses:
@@ -113,7 +113,7 @@ an example looks like:
     new Class({
         Extends : Data,
         initialize : function(options){
-            //if options comes in as a string, we assume it's the key we're selection (AKA 'id')
+            //if options comes in as a string, we assume it's the key we're selecting (AKA 'id')
             if(typeOf(options) == 'string') options = {key:options};
             if(!options) options = {};
             //link this to a particular datasource (defined in your configuration)
@@ -151,7 +151,7 @@ or if you only wanted the data payload (not a set of objects)
     
 One thing to note: This data layer is designed to discourage both streaming data sets and joins. If you need these features or you find this level of indirection uncomfortable you should probably manipulate the DB directly and skip the whole data layer (or even better, interface with an API). 
 
-Other Datasource specific features (for example MapReduce under mongo) must be accessed from the DB driver directly which may be accessed directly:
+Other Datasource specific features (for example MapReduce under mongo) must be accessed from the DB driver which may be accessed directly:
 
     Datasource::get('myAwesomeDatasource').connection;
 
@@ -162,13 +162,94 @@ ResourceBundling
 ----------------
 Resource Bundles are also configured by a JSON file, which defines the list of files included in this component as well as any other resources it depends on.
 
+as an example:
+
+    {
+        "resource" :[
+            "relative/path/to/file.js",
+            "relative/path/to/otherfile.js",
+            "relative/path/to/style.css"
+        ],
+        "dependency":[
+            "my_lib"
+        ]
+    }
+
 Routing
 -------
 
+Routing is a rule based system of the form:
+
+    articles/*/# = "articles?name=*&page=*"
+    
+in the 'routes.conf' file under the '[_root_]' section. The rules are listed in their order of precedence.
+
+
 Configuration
 -------------
+
+This JSON file controls application settings
+
+Built in settings are:
+1. **application.mode** : the run mode, currently affecting only the volume of application output ('debug', 'production')
+2. **application.cookie_domain** : set the cookie domain for the app
+3. **application.figlet_font** At certain points, protolus may attempt to output things in using a figlet font (Ascii Art), this allows you to control that, just make sure the .
+4. **application.name** : this is how the app defines itself for logging and output
+5. **application.port** : what port will the app accept connections on
+6. **DB:<datasource name>** : define a datasource
+    1. **type** : what kind of datasource are we defining ('mysql', 'mongo', 'rabbit') //todo: 'memcache', 'redis'
+    2. **database** / **exchange** : which source to select, if needed
+    3. **host** : the host to connect to for this datasource
+    5. **user** / **password** : define the auth info, if needed
+    6. **session** : do we want to attach application sessions to this datasource
     
+as an example:
 
-//todo
+    {
+        "application":{
+            "mode" : "debug",
+            "cookie_domain": "protolus.dev",
+            "figlet_font" : "Doom",
+            "name" : "Protolus Demo",
+            "port" : "1234"
+        },
+        "DB:database":{
+            "type":"mysql",
+            "database" : "protolus",
+            "host" : "localhost",
+            "user" : "root",
+            "password" : "",
+            "mode":"mysql",
+            "session":"true"
+        },
+        "DB:events":{
+            "type":"rabbit",
+            "exchange" : "events",
+            "host" : "localhost"
+        }
+    }
+    
+Directory structure
+-------------------
+**/App/Panels** : the template root for panels and wrappers
+**/App/Controllers** : a parallel organization to the panels directory for the controllers
+**/Classes** : Where the data objects for your application lives
+**/Configuration** : various configuration files for the different environments the app runs in
+**/Fonts** : figlet fonts for app output
+**/Pages** : static html files
+**/Resources** : application modules
 
-Abbey Hawk Sparrow
+Running
+-------
+
+to run the web application:
+
+    node application.js
+    
+to run your data stubs as an API:
+    
+    node api.js 
+    
+Right now things are in flux, so beware some rough edges while various features finish landing. Let me know how it goes!
+
+-Abbey Hawk Sparrow
