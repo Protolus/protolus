@@ -231,13 +231,13 @@ as an example:
     
 Directory structure
 -------------------
-* **/App/Panels** : the template root for panels and wrappers
-* **/App/Controllers** : a parallel organization to the panels directory for the controllers
-* **/Classes** : Where the data objects for your application lives
-* **/Configuration** : various configuration files for the different environments the app runs in
-* **/Fonts** : figlet fonts for app output
-* **/Pages** : static html files
-* **/Resources** : application modules
+- **/App/Panels** : the template root for panels and wrappers
+- **/App/Controllers** : a parallel organization to the panels directory for the controllers
+- **/Classes** : Where the data objects for your application lives
+- **/Configuration** : various configuration files for the different environments the app runs in
+- **/Fonts** : figlet fonts for app output
+- **/Pages** : static html files
+- **/Resources** : application modules
 
 Running
 -------
