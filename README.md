@@ -94,7 +94,7 @@ Resources may be targeted to outputs (by default all output will be to 'HEAD' wh
     <html>
         <head>
             <title>WTFBBQ!</title>
-            {$HEAD}
+            <!--[[HEAD]]-->
         </head>
         <body>
             {$content}
