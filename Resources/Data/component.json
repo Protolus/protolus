@@ -8,6 +8,6 @@
         "RabbitDatastream.js"
     ],
     "dependency":[
-        "mootools_core"
+        "MooTools_Core"
     ]
 }

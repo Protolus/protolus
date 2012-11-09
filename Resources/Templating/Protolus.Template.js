@@ -69,6 +69,10 @@ Protolus.TagTemplate = new Class({
     setData : function(data){
     
     },
+    getRoot : function(){
+        if(!this.progenitor) return this;
+        else return this.progenitor.getRoot();
+    },
     renderNode : function(node){
         if(typeOf(node) == 'string'){
             return node;
@@ -117,6 +121,88 @@ Protolus.TagTemplate = new Class({
     }
     
 });
+Protolus.TemplateResourceTargeting = new Class({
+    targets : {'*':[]},
+    containsResource : function(resource, target){
+        if(!this.target) return this.targets['*'].contains(resource);
+        return !!this.targets[target][resource];
+    },
+    requiresResources : function(){
+        return this.targets['*'].length > 0;
+    },
+    addResource : function(resource, target){
+        if(!target) target = 'HEAD';
+        if(!this.targets[target]) this.targets[target] = [];
+        if(resource.dependencies.length == 0){
+            this.targets[target].push(resource);
+            this.targets['*'].push(resource.name);
+        }else{
+            var keys = this.resourceNames(target);
+            var index = 0;
+            this.targets[target].each(function(resource, key){
+                if(keys.contains(key)){
+                    var val = keys.indexOf(key);
+                    if(val > index) index = val;
+                } 
+            });
+            var old = keys.clone();
+            if(index) this.targets[target].splice(index, 0, resource); // add it before index
+            else this.targets[target].push(resource); //add it on to the end
+            this.targets['*'].push(resource.name);
+        }
+            
+    },
+    resourceNames : function(target){
+        var keys = [];
+        this.targets[target].each(function(resource, key){
+            keys.push(resource.name);
+        });
+        return keys;
+    },
+    eachResource : function(target, callback){
+        if(!target) target = 'HEAD';
+        this.targets[target].each(function(value, key){
+            if(key == '*') return;
+            callback(value, key);
+        }.bind(this));
+        
+    },
+    currentTargets : function(){
+        var targets = [];
+        Object.each(this.targets, function(value, key){
+            if(key == '*') return;
+            if(!targets.contains(key)) targets.push(key)
+        });
+        return targets;
+    },
+    ensureResources : function(resources, callback){
+        if(!this.resourceRoot) this.resourceRoot = this.getRoot();
+        var iterations = 0;
+        resources.each(function(resourceName){
+            iterations++;
+            if(!this.resourceRoot.containsResource(resourceName)){
+                var rez = new Protolus.Resource(resourceName, function(){
+                    this.resourceRoot.addResource(rez);
+                    iterations--;
+                    if(iterations == 0) callback();
+                }.bind(this), {
+                    onDependency : function(dependencies, cb){
+                        iterations++;
+                        this.ensureResources(dependencies, function(){
+                            iterations--;
+                            cb();
+                        }.bind(this));
+                    }.bind(this),
+                    mode : 'return',
+                    resolveDependencies : true
+                });
+            }else iterations--;
+        }.bind(this));
+        if(iterations == 0) callback();
+    }
+})
+
+/*
 Protolus.Template.Node = new Class({ //basically an XML Node
     name: null,
     attributes : {},

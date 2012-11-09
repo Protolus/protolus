@@ -45,6 +45,7 @@ Protolus.Panel = new Class({
                 this.data = data;
             };
             var action;
+            if(options && options.onLoad) options.onLoad(this);
             while(this.delayed.length > 0){
                 action = this.delayed.pop();
                 this.render(action.data, action.callback);

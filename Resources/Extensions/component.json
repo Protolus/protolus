@@ -11,6 +11,6 @@
         "String.extensions.js"
     ],
     "dependency":[
-        "mootools_core"
+        "MooTools_Core"
     ]
 }

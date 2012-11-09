@@ -93,28 +93,40 @@ Protolus.resources.components = {};
 Protolus.resources.js = [];
 Protolus.Resource = new Class({
     resources : [],
+    dependencies : [],
     scriptFiles : [],
     styleFiles : [],
-    files : {},
+    fileRegistry : {},
     loaded : false,
     mode : 'implicit', //'implicit', 'return'
+    resolveDependencies : false,
     initialize : function(name, callback, option){ //todo, integrate callback into options and use normal options
         if(option && option.mode) this.mode = option.mode;
-        /*if(Protolus.resources.components[name] != undefined){
-            callback.delay(1);
-            return Protolus.resources.components[name];
-        }else Protolus.resources.components[name] = this;*/
-       // var iniParser = new Midas.OrderedINIParser();
+        if(option && option.resolveDependencies) this.resolveDependencies = option.resolveDependencies;
+        this.name = name;
         var filename = Protolus.resourceDirectory+'/'+name+'/component.json';
+        var ob = this;
         new Request.JSON({
             url: filename, 
             async: (!(callback === true)),
-            onSuccess: function(data){
+            onSuccess: function loadResource(data){
+                if(this.resolveDependencies && data.dependency && data.dependency.length){
+                    var dependencies = data.dependency;
+                    this.dependencies = dependencies;
+                    data.dependency = [];
+                    var dependencyCallback = function(){
+                        loadResource.bind(this)(data, callback); //load the rest of the resources
+                    }.bind(this);
+                    if(option && option.onDependency){
+                        option.onDependency(dependencies, dependencyCallback);
+                    }
+                    return;
+                }
                 if(data.resource) data.resource.each(function(file){
                     var type = file.split('.').pop().toLowerCase();
                     var path = Protolus.resourceDirectory+'/'+name+'/'+file;
-                    if(!this.files[type]) this.files[type] = [];
-                    this.files[type].push(path);
+                    if(!this.fileRegistry[type]) this.fileRegistry[type] = [];
+                    this.fileRegistry[type].push(path);
                     switch(type){
                         case 'js':
                             this.scriptFiles.push(path);
@@ -143,20 +155,24 @@ Protolus.Resource = new Class({
         if(Protolus.isNode){
             var count = 0;
             var result = '';
-            this.files[type].each(function(res){
-                count++;
-                System.file.readFile(res, 'utf8', function(err, data){
-                    if(err){
-                        console.log((new Error).stack);
-                        throw('file load error('+res.toString()+')!');
-                    }
-                    files.push(data+' //@ sourceURL='+res+"\n");
-                    count--;
-                    if(count == 0){
-                        callback(files);
-                    }
+            if(this.fileRegistry[type]){
+                this.fileRegistry[type].each(function(res){
+                    count++;
+                    System.file.readFile(res, 'utf8', function(err, data){
+                        if(err){
+                            console.log((new Error).stack);
+                            throw('file load error('+res.toString()+')!');
+                        }
+                        files.push(data+' //@ sourceURL='+res+"\n");
+                        count--;
+                        if(count == 0){
+                            callback(files);
+                        }
+                    }.bind(this));
                 });
-            });
+            }else{
+                callback([]);
+            }
         }else{
         
         }

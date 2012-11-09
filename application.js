@@ -5,9 +5,28 @@ GLOBAL.mongo = require("mongojs");
 GLOBAL.amqp = require("amqp");
 require('AsciiArt').apply(GLOBAL);
 require('Protolus.Bootstrap').apply(GLOBAL);
+//GLOBAL.threads = require("threads_a_gogo");
+//var thread = threads.create();
+//thread.load(__dirname +'/test.js');
 
+//thread.on('test-return', function(result){
+//    console.log('test', result);
+//});
 
-Protolus.resourceDirectory = __dirname+'/Source';
+/*thread.eval('function meaning(){return 42}', function(err, val){
+});
+
+/*System.file.readFile(__dirname +'/test.js', 'utf8', function(err, data){
+    console.log('file', data, err);
+});
+//*/
+
+/*thread.eval('meaning()', function(err, val){
+    console.log('blah', val, err);
+});*/
+
+//*
+Protolus.resourceDirectory = __dirname+'/Resources';
 Protolus.configurationDirectory = __dirname+'/Configuration';
 Protolus.classDirectory = __dirname+'/Classes';
 
@@ -27,6 +46,7 @@ Protolus.requestableFiletypes = [
     'css',
     'less'
 ];
+
 Protolus.verbose = true;
 var application;
 var errorFunction = function(connection, message, code){
@@ -61,8 +81,11 @@ Protolus.require(
                     Protolus.route(path, function(routedPath){
                         Protolus.Panel.exists(path, function(panelExists){
                             if(panelExists){
-                                Protolus.PageRenderer.renderPage(path, function(html){
-                                    connection.respond(html);
+                                Protolus.PageRenderer.renderPage(path, {
+                                    onSuccess : function(html){
+                                        connection.respond(html);
+                                    },
+                                    resources : ['MooTools']
                                 });
                             }else{
                                 errorFunction(connection, 'This panel does not exist', 404);
@@ -70,7 +93,9 @@ Protolus.require(
                         });
                     });
                 }
+                
             });
         });
     }
 );
+//*/

@@ -15,7 +15,7 @@ provides: [Midas.Smarty]
 */
 Protolus.Template.Smarty = new Class({
     Extends : Protolus.TagTemplate,
-    Implements : [Protolus.TemplateData],
+    Implements : [Protolus.TemplateData, Protolus.TemplateResourceTargeting],
     parent : false,
     targets : {},
     initialize: function(text, options){
@@ -80,22 +80,40 @@ Protolus.Template.Smarty = new Class({
                     if(!node.attributes.mode) node.attributes.mode = 'targeted';
                     if(!node.attributes.target) node.attributes.target = 'HEAD';
                     else node.attributes.target = node.attributes.target.toUpperCase();
-                    if(!rootPanel.targets[node.attributes.target]) rootPanel.targets[node.attributes.target] = [];
                     var resources = node.attributes.name.split(',');
                     var result = '';
-                    resources.each(function(resourceName){
-                        if(!rootPanel.targets[node.attributes.target].contains(resourceName)){
-                            var id;
-                            if(node.attributes.mode != 'targeted'){
+                    if(node.attributes.mode == 'targeted'){
+                        rootPanel.ensureResources(resources, function(){
+                            //noop
+                        });
+                    }else{
+                        //todo: reenable inline
+                        /*
+                        resources.each(function(resourceName){
+                            if(!rootPanel.containsResource(resourceName)){
                                 if(result == '') result = '<script>';
                                 id = this.async();
                                 result += id;
-                            }else{
+                                //on return
+                                res.files('js', function(files){
+                                    this.processReturn(id, files.join("\n"));
+                                }.bind(this));
+                            });
+                        }); //*/
+                    }
+                    /*resources.each(function(resourceName){
+                        if(!rootPanel.containsResource(resourceName)){
+                            var id;
+                            if(node.attributes.mode == 'targeted'){
                                 this.postProcessReturnCount++;
+                            }else{
+                                if(result == '') result = '<script>';
+                                id = this.async();
+                                result += id;
                             }
                             var res = new Protolus.Resource(resourceName, function(){
                                 if(node.attributes.mode == 'targeted'){
-                                    rootPanel.targets[node.attributes.target].push(res);
+                                    rootPanel.addResource(res);
                                     this.postProcessReturnCount--;
                                     if(this.postProcessReturnCount == 0 && this.renderCallback){
                                         this.renderCallback(this.rendered);
@@ -106,11 +124,27 @@ Protolus.Template.Smarty = new Class({
                                         this.processReturn(id, files.join("\n"));
                                     }.bind(this));
                                 }
-                                //todo: async signalling?
                                 
-                            }.bind(this), {mode : 'return'});
+                            }.bind(this), {
+                                mode : 'return',
+                                resolveDependencies : true,
+                                onDependency : function loadDependency(dependencies, callback){
+                                    var dependency = dependencies.shift();
+                                    console.log(dependency, dependencies);
+                                    if(dependencies.length == 0){
+                                        if(callback) callback();
+                                        return;
+                                    }
+                                    if(rootPanel.containsResource(dependency)){
+                                        var resource = new Protolus.Resource(dependency, function(){
+                                            rootPanel.addResource(resource);
+                                            loadDependency(dependencies, callback);
+                                        }, {mode : 'return', resolveDependencies : true});
+                                    }else loadDependency(dependencies, callback);
+                                }
+                            });
                         }
-                    }.bind(this));
+                    }.bind(this));*/
                     if(result != '') result += '</scr'+'ipt>';
                     //modes: targeted(d), inline
                     return result;
@@ -161,10 +195,6 @@ Protolus.Template.Smarty = new Class({
                     }
             }
         }
-    },
-    getRoot : function(){
-        if(!this.progenitor) return this;
-        else return this.progenitor.getRoot();
     },
     getVariable : function(variable){
         return this.get(variable);

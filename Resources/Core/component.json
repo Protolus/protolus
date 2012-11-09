@@ -5,7 +5,6 @@
         "Protolus.Logger.js"
     ],
     "dependency":[
-        "protolus_init",
-        "midas"
+        "MooTools_Core"
     ]
 }

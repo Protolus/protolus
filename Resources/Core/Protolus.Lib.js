@@ -31,7 +31,7 @@ Protolus.Application = new Class({
         this.setOptions(options);
         if(Protolus.isNode) this.mode = 'private';
         this.environment = this.getEnvironment('PROTOLUS_MACHINE_TYPE') || 'production';
-        if(this.options.data){
+        if(this.options.data){ //switch this to inside the conf return
             this.loadConfiguration(
                 Protolus.configurationDirectory+'/'+this.environment+'.'+this.mode+'.json', 
                 function(){
