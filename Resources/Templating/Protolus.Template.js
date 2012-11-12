@@ -56,6 +56,7 @@ Protolus.TagTemplate = new Class({
     tagRegistry : null,
     tagStack : [],
     root : null,
+    progenitor : false,
     postProcessReturnCount : 0,
     initialize: function(text, options){
         this.parser = new Protolus.TagParser(options);
@@ -70,6 +71,7 @@ Protolus.TagTemplate = new Class({
     
     },
     getRoot : function(){
+        //console.log('getroot', this.name, this.progenitor);
         if(!this.progenitor) return this;
         else return this.progenitor.getRoot();
     },
@@ -122,50 +124,50 @@ Protolus.TagTemplate = new Class({
     
 });
 Protolus.TemplateResourceTargeting = new Class({
-    targets : {'*':[]},
+    targets : {'*':{}},
+    environment : {},
+    fetching : 0,
+    delayedForFetch : [],
+    loadingComplete : function(callback){
+        if(this.fetching) this.delayedForFetch.push(callback);
+        else callback();
+    },
     containsResource : function(resource, target){
-        if(!this.target) return this.targets['*'].contains(resource);
-        return !!this.targets[target][resource];
+        if(typeOf(resource) == 'string') return Object.keys(this.targets['*']).contains(resource);
+        else return Object.values(this.targets['*']).contains(resource);
     },
     requiresResources : function(){
-        return this.targets['*'].length > 0;
+        return Object.keys(this.targets['*']).length > 0;
     },
     addResource : function(resource, target){
         if(!target) target = 'HEAD';
         if(!this.targets[target]) this.targets[target] = [];
-        if(resource.dependencies.length == 0){
-            this.targets[target].push(resource);
-            this.targets['*'].push(resource.name);
-        }else{
-            var keys = this.resourceNames(target);
-            var index = 0;
-            this.targets[target].each(function(resource, key){
-                if(keys.contains(key)){
-                    var val = keys.indexOf(key);
-                    if(val > index) index = val;
-                } 
-            });
-            var old = keys.clone();
-            if(index) this.targets[target].splice(index, 0, resource); // add it before index
-            else this.targets[target].push(resource); //add it on to the end
-            this.targets['*'].push(resource.name);
-        }
+        this.targets['*'][resource.name] = resource;
+        this.targets[target].push(resource.name);
             
     },
     resourceNames : function(target){
-        var keys = [];
-        this.targets[target].each(function(resource, key){
-            keys.push(resource.name);
-        });
-        return keys;
+        if(!target) return Object.keys(this.targets['*']);
+        else return this.targets[target];
     },
     eachResource : function(target, callback){
-        if(!target) target = 'HEAD';
-        this.targets[target].each(function(value, key){
-            if(key == '*') return;
-            callback(value, key);
+        var flattenDependencies = function(resources, result){
+            if(!result) result = [];
+            resources.each(function(resourceName, key){
+                var resource = this.targets['*'][resourceName];
+                if(!resource) throw('unknown resource:'+resourceName);
+                if(resource.dependency){
+                    result = flattenDependencies(resource.dependency, result);
+                }
+                result.push(resourceName);
+            }.bind(this));
+            return result;
+        }.bind(this);
+        var ordering = flattenDependencies(this.targets[target]);
+        var ords = [];
+        ordering.each(function(name){
+            callback(this.targets['*'][name], name);
         }.bind(this));
-        
     },
     currentTargets : function(){
         var targets = [];
@@ -175,16 +177,27 @@ Protolus.TemplateResourceTargeting = new Class({
         });
         return targets;
     },
-    ensureResources : function(resources, callback){
+    ensureResources : function(resources, callback, directory){
+        if(!directory) directory = Protolus.resourceDirectory;
         if(!this.resourceRoot) this.resourceRoot = this.getRoot();
         var iterations = 0;
+        this.fetching++;
         resources.each(function(resourceName){
             iterations++;
             if(!this.resourceRoot.containsResource(resourceName)){
                 var rez = new Protolus.Resource(resourceName, function(){
-                    this.resourceRoot.addResource(rez);
                     iterations--;
-                    if(iterations == 0) callback();
+                    if(iterations == 0){
+                        this.fetching--;
+                        if(this.delayedForFetch.length > 0 && !this.fetching){
+                            var cbs = this.delayedForFetch;
+                            this.delayedForFetch = [];
+                            cbs.each(function(cb){
+                                cb();
+                            })
+                        }
+                        callback();
+                    }
                 }.bind(this), {
                     onDependency : function(dependencies, cb){
                         iterations++;
@@ -194,11 +207,23 @@ Protolus.TemplateResourceTargeting = new Class({
                         }.bind(this));
                     }.bind(this),
                     mode : 'return',
-                    resolveDependencies : true
+                    resolveDependencies : true,
+                    directory : directory
                 });
+                this.resourceRoot.addResource(rez);
             }else iterations--;
         }.bind(this));
-        if(iterations == 0) callback();
+        if(iterations == 0){
+            this.fetching--;
+            if(this.delayedForFetch.length > 0 && !this.fetching){
+                var cbs = this.delayedForFetch;
+                this.delayedForFetch = [];
+                cbs.each(function(cb){
+                    cb();
+                })
+            }
+            callback();
+        }
     }
 })
 

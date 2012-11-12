@@ -41,6 +41,7 @@ Protolus.Panel = new Class({
         if(!options || !options.dataEndpoint) this.options.dataEndpoint += '/'+this.name;
         this.fetchTemplate(function(template){
             this.template = new Protolus.Template[this.options.type](template, {wrapperSet:this.options.wrapperSet});
+            this.template.name = this.name;
             this.template.setData = function(data){
                 this.data = data;
             };
@@ -57,6 +58,7 @@ Protolus.Panel = new Class({
             var name = './App/Controllers/'+this.name+'.controller.js';
             var file = System.file.readFileSync(name);
             var renderer = this.template;
+            if(!file) return {};
             eval(file.toString());
             return renderer.data;
         }
@@ -68,8 +70,12 @@ Protolus.Panel = new Class({
                 var name = './App/Controllers/'+this.name+'.controller.js';
                 System.file.readFile(name, function(err, file){
                     var renderer = this.template;
-                    eval(file.toString());
-                    callback(renderer.data);
+                    if(!file){
+                        callback({});
+                    }else{
+                        eval(file.toString());
+                        callback(renderer.data);
+                    }
                 }.bind(this));
             }else{
                 (new Request.JSON({

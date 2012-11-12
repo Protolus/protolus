@@ -72,20 +72,27 @@ Protolus.Template.Smarty = new Class({
                     if(node.attributes.wrapper && this.options.wrapperSet){
                         this.options.wrapperSet(node.attributes.wrapper);
                     };
+                    var rootPanel = this.getRoot();
+                    if(node.attributes.title){
+                        rootPanel.environment['page_title'] = node.attributes.title;
+                    };
                     return '';
                     break;
                 case 'require':
                     var rootPanel = this.getRoot();
-                    if(!node.attributes.name) throw('panel macro requires \'name\' attribute');
+                    if(node.attributes.name == undefined){
+                        console.log(node.attributes);
+                        throw('require macro requires \'name\' attribute');
+                    }
                     if(!node.attributes.mode) node.attributes.mode = 'targeted';
+                    if(!node.attributes.directory) node.attributes.directory = Protolus.resourceDirectory;
+                    if(node.attributes.directory == "local") node.attributes.directory = "App/Resources";
                     if(!node.attributes.target) node.attributes.target = 'HEAD';
                     else node.attributes.target = node.attributes.target.toUpperCase();
                     var resources = node.attributes.name.split(',');
                     var result = '';
                     if(node.attributes.mode == 'targeted'){
-                        rootPanel.ensureResources(resources, function(){
-                            //noop
-                        });
+                        rootPanel.ensureResources(resources, function(){}, node.attributes.directory);
                     }else{
                         //todo: reenable inline
                         /*
@@ -101,50 +108,6 @@ Protolus.Template.Smarty = new Class({
                             });
                         }); //*/
                     }
-                    /*resources.each(function(resourceName){
-                        if(!rootPanel.containsResource(resourceName)){
-                            var id;
-                            if(node.attributes.mode == 'targeted'){
-                                this.postProcessReturnCount++;
-                            }else{
-                                if(result == '') result = '<script>';
-                                id = this.async();
-                                result += id;
-                            }
-                            var res = new Protolus.Resource(resourceName, function(){
-                                if(node.attributes.mode == 'targeted'){
-                                    rootPanel.addResource(res);
-                                    this.postProcessReturnCount--;
-                                    if(this.postProcessReturnCount == 0 && this.renderCallback){
-                                        this.renderCallback(this.rendered);
-                                        delete this.renderCallback;
-                                    }
-                                }else{
-                                    res.files('js', function(files){
-                                        this.processReturn(id, files.join("\n"));
-                                    }.bind(this));
-                                }
-                                
-                            }.bind(this), {
-                                mode : 'return',
-                                resolveDependencies : true,
-                                onDependency : function loadDependency(dependencies, callback){
-                                    var dependency = dependencies.shift();
-                                    console.log(dependency, dependencies);
-                                    if(dependencies.length == 0){
-                                        if(callback) callback();
-                                        return;
-                                    }
-                                    if(rootPanel.containsResource(dependency)){
-                                        var resource = new Protolus.Resource(dependency, function(){
-                                            rootPanel.addResource(resource);
-                                            loadDependency(dependencies, callback);
-                                        }, {mode : 'return', resolveDependencies : true});
-                                    }else loadDependency(dependencies, callback);
-                                }
-                            });
-                        }
-                    }.bind(this));*/
                     if(result != '') result += '</scr'+'ipt>';
                     //modes: targeted(d), inline
                     return result;
@@ -152,8 +115,10 @@ Protolus.Template.Smarty = new Class({
                 case 'panel':
                     var res = '';
                     if(!node.attributes.name) throw('panel macro requires \'name\' attribute');
-                    var subpanel = new Protolus.Panel(node.attributes.name);
-                    subpanel.progenitor = this;
+                    var subpanel = new Protolus.Panel(node.attributes.name, {onLoad:function(){
+                        subpanel.template.progenitor = this;
+                        //console.log('subpanel set', subpanel.template.progenitor);
+                    }.bind(this)});
                     var id = this.async(); //this indirection makes me uncomfortable
                     subpanel.render(function(panel){
                         this.processReturn(id, panel);

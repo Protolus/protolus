@@ -44,7 +44,8 @@ Protolus.requestableFiletypes = [
     'js',
     'tpl',
     'css',
-    'less'
+    'less',
+    'txt'
 ];
 
 Protolus.verbose = true;
@@ -85,7 +86,7 @@ Protolus.require(
                                     onSuccess : function(html){
                                         connection.respond(html);
                                     },
-                                    resources : ['MooTools']
+                                    resources : ['Main']
                                 });
                             }else{
                                 errorFunction(connection, 'This panel does not exist', 404);

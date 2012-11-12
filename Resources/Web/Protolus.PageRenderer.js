@@ -91,56 +91,6 @@ Protolus.PageRenderer = {
             window.location.reload(); // we might just be changing the hash
         }
     },
-    /*renderPage : function(panelName, init, callback){
-        console.log('RP');
-        if(typeOf(init) == 'function' && !callback){
-            callback = init;
-            delete init;
-        }
-        var anchor = {};
-        var panel = new Protolus.Panel(panelName, {
-            wrapperSet : function(newWrapper){
-                anchor.wrapper = newWrapper;
-            },
-            onLoad :function(){
-                if(init) init(panel);
-            }
-        });
-        //panel.implement(Protolus.TemplateResourceTargeting);
-        panel.render(function(content){
-            if(!anchor.wrapper){
-                console.log('immediate', content);
-                callback(content);
-                return;
-            }
-            var wrapper = new Protolus.Panel(anchor.wrapper, {
-                templateMode : 'wrapper'
-            });
-            var data = {
-                content : content
-            };
-            wrapper.render(data, function(wrappedContent){
-                if(Object.keys(panel.template.targets).length > 0){
-                Object.each(panel.template.targets, function(resources, key){
-                    if(key == '*') return;
-                    var result = '';
-                    var count = 0;
-                    resources.each(function(resource){
-                        count++;
-                        resource.files('js', function(files){
-                            result += files.join("\n");
-                            wrappedContent = wrappedContent.replace('<!--[['+key+']]-->', '<script>'+result+'</scr'+'ipt>');
-                            count--;
-                            if(count == 0){
-                                callback(wrappedContent);
-                            }
-                        });
-                    });
-                });
-                }else callback(wrappedContent);
-            });
-        });
-    }, //*/
     renderPage : function(panelName, options){
         var anchor = {};
         if( typeOf(options) == 'function' ) options = {
@@ -156,51 +106,75 @@ Protolus.PageRenderer = {
                 panel.template.ensureResources(options.resources, function(){ //preload passed resources
                     panel.render(function(content){
                         if(!anchor.wrapper){
-                            console.log('immediate', content);
                             options.onSuccess(content);
                             return;
                         }
                         var wrapper = new Protolus.Panel(anchor.wrapper, {
                             templateMode : 'wrapper'
                         });
-                        var data = {
-                            content : content
-                        };
+                        var data = Object.clone(panel.template.environment);
+                        data.content = content;
                         wrapper.render(data, function(wrappedContent){
-                            if(panel.template.requiresResources()){
-                                var targets = panel.template.currentTargets();
-                                var targs = 0;
-                                targets.each(function(target){
-                                    targs++;
-                                    var count = 0;
-                                    var result = '';
-                                    var checkComplete = function(){
-                                        if(count === 0 && targs === 0) options.onSuccess(wrappedContent);
-                                    };
-                                    panel.template.eachResource(target, function(resource, name){
-                                        count++;
-                                        resource.files('js', function(files){
-                                            result += files.join("\n");
-                                            count--;
-                                            if(count === 0){
-                                                targs--;
-                                                wrappedContent = wrappedContent.replace('<!--[['+target+']]-->', function(){return '<script>'+result+'</scr'+'ipt>'});
-                                                result = '';
-                                            }
-                                            if(count === 0 && targs === 0){ //we're done fetching a file
-                                                options.onSuccess(wrappedContent);
-                                            }
+                            panel.template.loadingComplete(function(){
+                                if(panel.template.requiresResources()){ // <- start here
+                                    var targets = panel.template.currentTargets();
+                                    var targs = 0;
+                                    var content = {};
+                                    content.wrapped = wrappedContent;
+                                    targets.each(function(target){
+                                        targs++;
+                                        var count = 0;
+                                        var scount = 0;
+                                        var result = '';
+                                        var sresult = '';
+                                        panel.template.eachResource(target, function(resource, name){
+                                            count++;
+                                            resource.files('js', function(files){
+                                                result += files.join("\n");
+                                                count--;
+                                                //if(count === 0){
+                                                    content.wrapped = content.wrapped.replace(
+                                                        '<!--[['+target+']]-->', 
+                                                        function(){ //must use function form to prevent escaping on '$'
+                                                            return '<script resources="'+resource.name+'">'+result+'</scr'+'ipt><!--[['+target+']]-->'
+                                                        });
+                                                    result = '';
+                                                //}
+                                                if(count === 0 && scount === 0) targs--;
+                                                if(count === 0 && scount === 0 && targs === 0){ //we're done fetching a file
+                                                    options.onSuccess(content.wrapped);
+                                                }
+                                            });
+                                            scount++;
+                                            resource.files('css', function(files){
+                                                sresult += files.join("\n");
+                                                scount--;
+                                                //if(scount === 0){ //todo: support compound blocks
+                                                    if(sresult.length != 0){
+                                                        content.wrapped = content.wrapped.replace(
+                                                            '<!--[['+target+']]-->', 
+                                                            function(){ //must use function form to prevent escaping on '$'
+                                                                return '<style resources="'+resource.name+'">'+sresult+'</sty'+'le><!--[['+target+']]-->'
+                                                            });
+                                                        sresult = '';
+                                                    }
+                                                //}
+                                                if(count === 0 && scount === 0) targs--;
+                                                if(count === 0 && scount === 0 && targs === 0){ //we're done fetching a file
+                                                    options.onSuccess(content.wrapped);
+                                                }
+                                            });
                                         });
+                                        if(count === 0 && scount === 0 && targs === 0) options.onSuccess(content.wrapped); //we're done initializing the target fetch
                                     });
-                                    if(count === 0 && targs === 0) options.onSuccess(wrappedContent); //we're done initializing the target fetch
-                                });
-                                if(targs === 0) options.onSuccess(wrappedContent); //we're done initializing all fetches
-                            }else{
-                                options.onSuccess(wrappedContent);
-                            }
+                                    if(targs === 0) options.onSuccess(content.wrapped); //we're done initializing all fetches
+                                }else{
+                                    options.onSuccess(wrappedContent);
+                                }
+                            });
                         });
                     });
-                });
+                }, 'App/Resources');
             }
         });
         

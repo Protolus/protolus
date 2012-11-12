@@ -97,6 +97,9 @@ Protolus.WebConnection = new Class({
         this.response.end(text);
         if(this.session) this.session.save();
     },
+    setHeader : function(name, value){
+        this.response.setHeader(name, value);
+    },
     api : function(){
         this.respond = function(message, code){
             if(!code) code = 'ok';
@@ -294,32 +297,40 @@ Protolus.WebApplication = new Class({
             connection.request.path = path;
             var type = path.lastIndexOf('.')!= -1? path.substring(path.lastIndexOf('.')+1): false;
             connection.request.type = type;
-            if(type) connection.error('incompatible filetype indicated');
-            //todo: check to see if path matches custom path, if not:
-            var parts = uri.pathname.split('/');
-            if(parts[parts.length-1] == '') parts.pop();
-            if(parts[0] == '') parts.shift();
-            var identifier = null;
-            var subject = parts.shift();
-            if(parts.length){
-                identifier = parts.shift();
-            }
-            if (request.method == 'POST') {
-                var body = '';
-                request.on('data', function (data){
-                    body += data;
+            var file = '/Users/khrome/Dropbox/Code/Protolus.js'+path;
+            if(type && System.file.existsSync(file)){
+                System.file.readFile(file, function(err, data){
+                    connection.setHeader("Content-Type", System.mime.lookup(file));
+                    if(err) connection.respond('[ERROR]');
+                    else connection.respond(data.toString());
                 });
-                request.on('end', function (){
-                    try{
-                        args = JSON.parse(body);
-                    }catch(ex){
-                        args = System.querystring.parse(body);
-                    }
-                    finish(Object.merge(args, uri.query), connection);
-                }.bind(this));
             }else{
-                args = uri.query;
-                finish(args, connection);
+                //todo: check to see if path matches custom path, if not:
+                var parts = uri.pathname.split('/');
+                if(parts[parts.length-1] == '') parts.pop();
+                if(parts[0] == '') parts.shift();
+                var identifier = null;
+                var subject = parts.shift();
+                if(parts.length){
+                    identifier = parts.shift();
+                }
+                if (request.method == 'POST') {
+                    var body = '';
+                    request.on('data', function (data){
+                        body += data;
+                    });
+                    request.on('end', function (){
+                        try{
+                            args = JSON.parse(body);
+                        }catch(ex){
+                            args = System.querystring.parse(body);
+                        }
+                        finish(Object.merge(args, uri.query), connection);
+                    }.bind(this));
+                }else{
+                    args = uri.query;
+                    finish(args, connection);
+                }
             }
         }.bind(this));
     }

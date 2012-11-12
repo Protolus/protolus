@@ -100,11 +100,14 @@ Protolus.Resource = new Class({
     loaded : false,
     mode : 'implicit', //'implicit', 'return'
     resolveDependencies : false,
+    baseDirectory : false,
     initialize : function(name, callback, option){ //todo, integrate callback into options and use normal options
         if(option && option.mode) this.mode = option.mode;
         if(option && option.resolveDependencies) this.resolveDependencies = option.resolveDependencies;
+        if(option && option.directory) this.baseDirectory = option.directory;
+        else this.baseDirectory = Protolus.resourceDirectory;
         this.name = name;
-        var filename = Protolus.resourceDirectory+'/'+name+'/component.json';
+        var filename = this.baseDirectory+'/'+name+'/component.json';
         var ob = this;
         new Request.JSON({
             url: filename, 
@@ -124,7 +127,7 @@ Protolus.Resource = new Class({
                 }
                 if(data.resource) data.resource.each(function(file){
                     var type = file.split('.').pop().toLowerCase();
-                    var path = Protolus.resourceDirectory+'/'+name+'/'+file;
+                    var path = this.baseDirectory+'/'+name+'/'+file;
                     if(!this.fileRegistry[type]) this.fileRegistry[type] = [];
                     this.fileRegistry[type].push(path);
                     switch(type){
@@ -146,7 +149,9 @@ Protolus.Resource = new Class({
                 }
             }.bind(this),
             onFailure: function(data){
-                console.log('RESOURCE ERROR LOADING : '+name+'!');
+                console.log('['+AsciiArt.ansiCodes('⚠ ERROR', Protolus.errorColor)+']:'+'RESOURCE LOADING ERROR ('+name+')');
+                callback();
+                //console.log('RESOURCE ERROR LOADING : '+name+'!');
             }
         }).send();
     },
@@ -156,14 +161,14 @@ Protolus.Resource = new Class({
             var count = 0;
             var result = '';
             if(this.fileRegistry[type]){
-                this.fileRegistry[type].each(function(res){
+                this.fileRegistry[type].each(function(res, index){
                     count++;
                     System.file.readFile(res, 'utf8', function(err, data){
                         if(err){
                             console.log((new Error).stack);
                             throw('file load error('+res.toString()+')!');
                         }
-                        files.push(data+' //@ sourceURL='+res+"\n");
+                        files[index] = (data+' //@ sourceURL='+res+"\n");
                         count--;
                         if(count == 0){
                             callback(files);
