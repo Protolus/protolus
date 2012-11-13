@@ -1,0 +1,29 @@
+{
+    "resource" :[
+        "codemirror.js",
+        "codemirror.css",
+        "style.css",
+        "mode/javascript/javascript.js",
+        "rules.js",
+        "editor.js",
+        "rule.js",
+        "component.js",
+        "linkable_component.js",
+        "container_component.js",
+        "meta_component.js",
+        "Components/statement.js",
+        "Components/function.js",
+        "Components/assignment.js",
+        "Components/block.js",
+        "Components/call.js",
+        "Components/expression.js",
+        "Components/iterator.js",
+        "Components/method.js",
+        "Components/reference.js",
+        "Components/operation.js",
+        "inspector.js",
+        "toolbar.js",
+        "rules.css"
+    ],
+    "dependency" : ["MooTools_Core"]
+}

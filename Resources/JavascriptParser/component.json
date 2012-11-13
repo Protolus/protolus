@@ -1,0 +1,9 @@
+{
+    "resource" :[
+        "jslint/tokens.js",
+        "jslint/parse.js",
+        "jslint/jslint.js",
+        "JavascriptParser.js"
+    ],
+    "dependency" : ["MooTools_Core"]
+}

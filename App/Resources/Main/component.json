@@ -1,0 +1,11 @@
+{
+    "resource" :[
+        "HTML5.js",
+        "core.css",
+        "filtering.js",
+        "core.js"
+    ],
+    "dependency":[
+        "MooTools_Core"
+    ]
+}

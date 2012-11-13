@@ -91,22 +91,35 @@ Protolus.Template.Smarty = new Class({
                     else node.attributes.target = node.attributes.target.toUpperCase();
                     var resources = node.attributes.name.split(',');
                     var result = '';
-                    if(node.attributes.mode == 'targeted'){
-                        rootPanel.ensureResources(resources, function(){}, node.attributes.directory);
-                    }else{
-                        //todo: reenable inline
-                        /*
-                        resources.each(function(resourceName){
-                            if(!rootPanel.containsResource(resourceName)){
-                                if(result == '') result = '<script>';
-                                id = this.async();
-                                result += id;
-                                //on return
-                                res.files('js', function(files){
-                                    this.processReturn(id, files.join("\n"));
-                                }.bind(this));
+                    if(node.attributes.locality == 'remote'){
+                        //todo: implement remote locality
+                        if(node.attributes.mode == 'targeted'){
+                            //local settings don't matter, just app level
+                        }else{
+                            resources.each(function(resourceName){
+                                if(!rootPanel.containsResource(resourceName)){
+                                    //todo: inline async
+                                }
                             });
-                        }); //*/
+                        }
+                    }else{
+                        if(node.attributes.mode == 'targeted'){
+                            rootPanel.ensureResources(resources, function(){}, node.attributes.directory);
+                        }else{
+                            //*
+                            resources.each(function(resourceName){
+                                if(!rootPanel.containsResource(resourceName)){
+                                    //todo: reenable inline
+                                    /*if(result == '') result = '<script>';
+                                    id = this.async();
+                                    result += id;
+                                    //on return
+                                    res.files('js', function(files){
+                                        this.processReturn(id, files.join("\n"));
+                                    }.bind(this));*/
+                                }
+                            }); //*/
+                        }
                     }
                     if(result != '') result += '</scr'+'ipt>';
                     //modes: targeted(d), inline
@@ -115,9 +128,8 @@ Protolus.Template.Smarty = new Class({
                 case 'panel':
                     var res = '';
                     if(!node.attributes.name) throw('panel macro requires \'name\' attribute');
-                    var subpanel = new Protolus.Panel(node.attributes.name, {onLoad:function(){
+                    var subpanel = new Protolus.Panel(node.attributes.name, {onLoad:function(subpanel){
                         subpanel.template.progenitor = this;
-                        //console.log('subpanel set', subpanel.template.progenitor);
                     }.bind(this)});
                     var id = this.async(); //this indirection makes me uncomfortable
                     subpanel.render(function(panel){

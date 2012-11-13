@@ -1,0 +1,120 @@
+hr {
+  margin-top: 30px;
+  border: 1px dashed #bfbfb1;
+  border-bottom-color: #ffffff;
+}
+hr.or {
+  width: 300px;
+}
+hr.or:after {
+  content: 'or';
+  display: block;
+  position: absolute;
+  margin-left: 140px;
+  padding-right: 5px;
+  padding-left: 5px;
+  background-color: #edede9;
+  margin-top: -0.5em;
+  color: #605959;
+}
+#rules {
+  margin-right: 30%;
+  padding-right: 20px;
+}
+#rules.boxes .rules.node {
+  min-width: 40px;
+  min-height: 40px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -moz-border-radius-bottomright: 10px;
+  border-bottom-right-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
+  border-bottom-left-radius: 10px;
+  background-color: #FF0000;
+  border: 2px solid #000000;
+  /* todo make shadow work in angle & incline */
+
+  -webkit-box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.7);
+  -moz-box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.7);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  padding: 10px;
+}
+#rules.boxes .rules.linkable {
+  margin-right: 40px;
+}
+#rules.boxes .rules.node:last-of-type > .link {
+  width: 0px;
+}
+#rules.boxes .rules.container {
+  padding: 20px;
+  min-width: 40px;
+  min-height: 40px;
+  border: 2px dotted #000000;
+}
+#rules.boxes .rules.container .advanced_container {
+  background-color: #DDDDDD;
+  border: 2px solid #000000;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -moz-border-radius-bottomright: 10px;
+  border-bottom-right-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
+  border-bottom-left-radius: 10px;
+}
+#rules.boxes .rules.container .basic_container {
+  background-color: #CCCCCC;
+  border: 2px dashed #000000;
+  min-height: 50px;
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -moz-border-radius-bottomright: 10px;
+  border-bottom-right-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
+  border-bottom-left-radius: 10px;
+}
+#rules.code .rules.node {
+  border: 1px dotted grey;
+  padding: 2px;
+  display: inline-block;
+  font-size: 9px;
+}
+#rules.code .subject + .predicate:before {
+  content: "=";
+  display: 'inline-block';
+}
+#rules.code .rules.linkable {
+  display: inline-block;
+}
+#rules.code .call .arguments {
+  -moz-border-radius-topright: 10px;
+  border-top-right-radius: 10px;
+  -moz-border-radius-topleft: 10px;
+  border-top-left-radius: 10px;
+  -moz-border-radius-bottomright: 10px;
+  border-bottom-right-radius: 10px;
+  -moz-border-radius-bottomleft: 10px;
+  border-bottom-left-radius: 10px;
+  min-height: 12px;
+  border: 2px solid black;
+  border-top-width: 0px;
+  border-bottom-width: 0px;
+}
+#rules.code .rules.separator {
+  content: ";";
+  display: 'block';
+}
+.inspector {
+  position: fixed;
+  display: block;
+  top: 0px;
+  right: 0px;
+  width: 30%;
+  padding: 20px;
+}

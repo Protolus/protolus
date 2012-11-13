@@ -1,6 +1,6 @@
 /*
 ---
-description: This is an asynchronous JS request pool for MooTools. Sometimes it's useful to fetch a bunch of resources in parallel, this plugin facilitates that.
+description: Request shim for 
 
 license: MIT-style
 
@@ -35,12 +35,13 @@ if(!Request){
             onException : false
         },
         initialize : function(){
-        
+            
         },
         send : function(){
             if(this.options.onRequest) this.options.onRequest(onRequest);
             if(this.options.onLoadStart) this.options.onLoadStart(onLoadStart);
             //TODO: WTF to do about progress?
+            console.log('fetching', this.options);
             request({
                 uri: this.options.url
             }, function (error, response, bodyText) {
