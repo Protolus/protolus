@@ -156,10 +156,10 @@ Protolus.TemplateResourceTargeting = new Class({
             resources.each(function(resourceName, key){
                 var resource = this.targets['*'][resourceName];
                 if(!resource) throw('unknown resource:'+resourceName);
-                if(resource.dependency){
-                    result = flattenDependencies(resource.dependency, result);
+                if(resource.dependencies){
+                    result = flattenDependencies(resource.dependencies, result);
                 }
-                result.push(resourceName);
+                if(!result.contains(resourceName)) result.push(resourceName);
             }.bind(this));
             return result;
         }.bind(this);
@@ -292,7 +292,7 @@ Protolus.Template.GenericNode = new Class({
     render: function(){
         return this.renderFunction(this);
     }
-});
+});*/
 Protolus.Template.registry = new Protolus.Registry();
 Protolus.Template.scan = function(type, classObject){
     var templates = document.getElements('head style[@type="protolus/'+type+'"]');

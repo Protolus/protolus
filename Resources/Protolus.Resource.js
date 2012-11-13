@@ -21,15 +21,15 @@ if(!Protolus) var Protolus = {};
 Protolus.routes = [];
 Protolus.routes.routesLoaded = false;
 Protolus.route = function(path, callback){
-    if(Protolus.routes.routesLoaded){
-        var iniParser = new Midas.OrderedINIParser();
+    if(!Protolus.routes.routesLoaded){
+        var iniParser = new Protolus.ConfParser();
         var myRequest = new Request({
-            url: '/App/routes.conf',
+            url: 'App/routes.conf',
             onSuccess: function(data){
                 try{
                     var ini = iniParser.parse(data, true);
                 }catch(ex){
-                    console.log('[routes not loaded]');
+                    console.log('[routes not loaded]', ex);
                 }
                 Protolus.routes = (ini && ini[0] && ini[0].value)?ini[0].value:[];
                 Protolus.routes.routesLoaded = true;
@@ -47,6 +47,9 @@ Protolus.route = function(path, callback){
                     });
                 });
                 Protolus.route(path, callback);
+            },
+            onFailure : function(){
+                console.log('sdddsda');
             }
         }).send();
         return;
@@ -55,21 +58,18 @@ Protolus.route = function(path, callback){
     Protolus.Panel.exists(path, function(panelExists){
         Protolus.routes.each(function(route, index){
             if(called) return;
-            //console.log(['routing', path, path.match(route.regex), route])
             if(route.key == '(.*?)'){
                 if(!panelExists){
-                    callback(path.replace(route.regex, route.value));
                     called = true;
+                    callback(path.replace(route.regex, route.value));
                 }
             }else if(!called && path.match(route.regex)){
-                callback(path.replace(route.regex, route.value));
                 called = true;
+                callback(path.replace(route.regex, route.value));
             }
         }.bind(this));
+        if(!called) callback(path);
     }.bind(this));
-    if(!called){
-        callback(path);
-    }
 };
 Protolus.consumeGetParameters = function(panel){
     if(panel.indexOf('?') != -1){ //we have some additional args we need to strip off
@@ -151,7 +151,6 @@ Protolus.Resource = new Class({
             onFailure: function(data){
                 console.log('['+AsciiArt.ansiCodes('⚠ ERROR', Protolus.errorColor)+']:'+'RESOURCE LOADING ERROR ('+name+')');
                 callback();
-                //console.log('RESOURCE ERROR LOADING : '+name+'!');
             }
         }).send();
     },

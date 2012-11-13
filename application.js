@@ -45,7 +45,7 @@ Protolus.requestableFiletypes = [
     'tpl',
     'css',
     'less',
-    'txt'
+    'txt','conf'
 ];
 
 Protolus.verbose = true;
@@ -80,15 +80,16 @@ Protolus.require(
                     }
                 }else{
                     Protolus.route(path, function(routedPath){
-                        Protolus.Panel.exists(path, function(panelExists){
+                        Protolus.Panel.exists(routedPath, function(panelExists){
                             if(panelExists){
-                                Protolus.PageRenderer.renderPage(path, {
+                                Protolus.PageRenderer.renderPage(routedPath, {
                                     onSuccess : function(html){
                                         connection.respond(html);
                                     },
                                     resources : ['Main']
                                 });
                             }else{
+                                console.log('ERROR!');
                                 errorFunction(connection, 'This panel does not exist', 404);
                             }
                         });

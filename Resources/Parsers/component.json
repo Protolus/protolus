@@ -1,7 +1,8 @@
 {
     "resource" :[
         "Protolus.TagParser.js",
-        "Protolus.HTMLParser.js"
+        "Protolus.HTMLParser.js",
+        "Protolus.ConfParser.js"
     ],
     "dependency":[
         "protolus_init"

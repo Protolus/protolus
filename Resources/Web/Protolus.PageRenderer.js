@@ -116,7 +116,7 @@ Protolus.PageRenderer = {
                         data.content = content;
                         wrapper.render(data, function(wrappedContent){
                             panel.template.loadingComplete(function(){
-                                if(panel.template.requiresResources()){ // <- start here
+                                if(panel.template.requiresResources()){
                                     var targets = panel.template.currentTargets();
                                     var targs = 0;
                                     var content = {};
