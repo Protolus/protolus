@@ -150,7 +150,7 @@ Protolus.TemplateResourceTargeting = new Class({
         if(!target) return Object.keys(this.targets['*']);
         else return this.targets[target];
     },
-    eachResource : function(target, callback){
+    orderedResources : function(targets){
         var flattenDependencies = function(resources, result){
             if(!result) result = [];
             resources.each(function(resourceName, key){
@@ -163,8 +163,17 @@ Protolus.TemplateResourceTargeting = new Class({
             }.bind(this));
             return result;
         }.bind(this);
-        var ordering = flattenDependencies(this.targets[target]);
-        var ords = [];
+        var ordering = flattenDependencies(targets);
+        return ordering;
+    },
+    collectResources : function(target, fn, callback){
+        var ordering = this.orderedResources(this.targets[target]);
+        ordering.collect(function(value, key, emit){
+            fn(this.targets['*'][value], value, emit);
+        }.bind(this), callback)
+    },
+    eachResource : function(target, callback){
+        var ordering = this.orderedResources(this.targets[target]);
         ordering.each(function(name){
             callback(this.targets['*'][name], name);
         }.bind(this));

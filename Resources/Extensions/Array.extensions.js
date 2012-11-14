@@ -29,6 +29,24 @@ if(!Array.copy){
     });
 }
 
+//collect a series of potentially async items into an ordered array, useful to auto-order async returns
+if(!Array.collect){
+    Array.implement({
+        collect : function(fn, callback){
+            var results = [];
+            var count = 0;
+            this.each(function(value, key){
+                count++;
+                fn(value, key, function(val){
+                    results[key] = val;
+                    count--;
+                    if(count == 0) callback(results);
+                });
+            });
+        }
+    });
+}
+
 if(!Array.sumStrings){
     Array.implement({
         sumStrings : function(){

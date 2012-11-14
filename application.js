@@ -72,11 +72,20 @@ Protolus.require(
                 connection.html();
                 var path = connection.request.path.substring(1);
                 var parts = path.split('/');
-                if(parts.lastIndexOf('.') != -1){
-                    var type = parts.substring(parts.lastIndexOf('.'));
-                    console.log('Type:'+type);
+                var filename = parts[parts.length-1];
+                if(filename.lastIndexOf('.') != -1){
+                    var type = filename.substring(filename.lastIndexOf('.')+1);
+                    console.log('['+AsciiArt.ansiCodes('FETCH', 'blue')+':'+type+'] : '+path);
                     if(!Protolus.requestableFiletypes.contains(type.toLowerCase())){
                         connection.htmlStatusToCode('error');
+                    }else{
+                        System.file.readFile(path, function(err, data){
+                            if(err){
+                                connection.error('File not found!', 404);
+                            }else{
+                                connection.respond(data);
+                            }
+                        });
                     }
                 }else{
                     Protolus.route(path, function(routedPath){
@@ -90,7 +99,7 @@ Protolus.require(
                                 });
                             }else{
                                 console.log('ERROR!');
-                                errorFunction(connection, 'This panel does not exist', 404);
+                                errorFunction(connection, 'This panel(\''+routedPath+'\') does not exist', 404);
                             }
                         });
                     });

@@ -117,57 +117,37 @@ Protolus.PageRenderer = {
                         wrapper.render(data, function(wrappedContent){
                             panel.template.loadingComplete(function(){
                                 if(panel.template.requiresResources()){
-                                    var targets = panel.template.currentTargets();
-                                    var targs = 0;
                                     var content = {};
                                     content.wrapped = wrappedContent;
-                                    targets.each(function(target){
-                                        targs++;
-                                        var count = 0;
-                                        var scount = 0;
-                                        var result = '';
-                                        var sresult = '';
-                                        panel.template.eachResource(target, function(resource, name){
-                                            count++;
+                                    panel.template.currentTargets().collect(function(target, key, emitTarget){ //each node
+                                        panel.template.collectResources(target, function(resource, name, emitResource){
+                                            var count = 0;
+                                            var result = '';
                                             resource.files('js', function(files){
-                                                result += files.join("\n");
-                                                count--;
-                                                //if(count === 0){
-                                                    content.wrapped = content.wrapped.replace(
-                                                        '<!--[['+target+']]-->', 
-                                                        function(){ //must use function form to prevent escaping on '$'
-                                                            return '<script resources="'+resource.name+'">'+result+'</scr'+'ipt><!--[['+target+']]-->'
-                                                        });
-                                                    result = '';
-                                                //}
-                                                if(count === 0 && scount === 0) targs--;
-                                                if(count === 0 && scount === 0 && targs === 0){ //we're done fetching a file
-                                                    options.onSuccess(content.wrapped);
-                                                }
+                                                if(files.length) result += '<script resources="'+name+'">'+(files.join("\n"))+'</scr'+'ipt>';
+                                                count++;
+                                                if(count == 2) emitResource(result); //complete a resource
                                             });
-                                            scount++;
                                             resource.files('css', function(files){
-                                                sresult += files.join("\n");
-                                                scount--;
-                                                //if(scount === 0){ //todo: support compound blocks
-                                                    if(sresult.length != 0){
-                                                        content.wrapped = content.wrapped.replace(
-                                                            '<!--[['+target+']]-->', 
-                                                            function(){ //must use function form to prevent escaping on '$'
-                                                                return '<style resources="'+resource.name+'">'+sresult+'</sty'+'le><!--[['+target+']]-->'
-                                                            });
-                                                        sresult = '';
-                                                    }
-                                                //}
-                                                if(count === 0 && scount === 0) targs--;
-                                                if(count === 0 && scount === 0 && targs === 0){ //we're done fetching a file
-                                                    options.onSuccess(content.wrapped);
-                                                }
+                                                if(files.length) result += '<style resources="'+name+'">'+(files.join("\n"))+'</sty'+'le>';
+                                                count++;
+                                                if(count == 2) emitResource(result); //complete a resource
+                                            });
+                                        }, function(resources){ //complete a target
+                                            emitTarget({
+                                                name : target,
+                                                content : resources.join("\n")
                                             });
                                         });
-                                        if(count === 0 && scount === 0 && targs === 0) options.onSuccess(content.wrapped); //we're done initializing the target fetch
+                                    }, function(targets){ //complete all targets
+                                        targets.each(function(target){
+                                            content.wrapped = content.wrapped.replace(
+                                                '<!--[['+target.name+']]-->', 
+                                                function(){ return target.content+'<!--[['+target.name+']]-->' }
+                                            );
+                                        });
+                                        options.onSuccess(content.wrapped);
                                     });
-                                    if(targs === 0) options.onSuccess(content.wrapped); //we're done initializing all fetches
                                 }else{
                                     options.onSuccess(wrappedContent);
                                 }
