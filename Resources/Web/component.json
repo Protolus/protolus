@@ -8,5 +8,8 @@
         "Protolus.PageRenderer.js",
         "Protolus.Modal.js",
         "Protolus.FileUploader.js"
+    ],
+    "dependency":[
+        "Core", "Templating"
     ]
 }

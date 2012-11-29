@@ -1,10 +1,10 @@
 {
     "resource" :[
         "Protolus.js",
-        "Protolus.Lib.js",
+        "Protolus.Application.js",
         "Protolus.Logger.js"
     ],
     "dependency":[
-        "MooTools_Core"
+        "Protolus", "Extensions"
     ]
 }

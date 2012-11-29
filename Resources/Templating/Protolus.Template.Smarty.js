@@ -164,8 +164,9 @@ Protolus.Template.Smarty = new Class({
                     }
                     return res;
                     break;
-                //case '':
-                    //break;
+                case 'literal':
+                    return node.children.join("\n");
+                    break;
                 default :
                     if(node.name.substring(0,1) == '$'){
                         return this.get(node.name.substring(1));

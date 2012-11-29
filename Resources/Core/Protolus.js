@@ -16,7 +16,7 @@ provides: [Protolus.currentPanel(), Protolus.initialize()]
 */
 
 if(!Protolus) var Protolus = {};
-Protolus.root = '/';
+/*Protolus.root = '/';
 Protolus.dynamic = false;
 Protolus.globals = {
     protolusVersion : '{$ version $}', // <- replace as part of the build process
@@ -88,7 +88,7 @@ Protolus.currentPanel = function(callback){
         panel = routedPanel;
     }.bind(this));
     return panel;
-};
+};*/
 Protolus.replacementTimeout = 16384;
 Protolus.renderDelays = {};
 Protolus.renderCounts = {};

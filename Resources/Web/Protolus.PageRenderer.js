@@ -117,37 +117,152 @@ Protolus.PageRenderer = {
                         wrapper.render(data, function(wrappedContent){
                             panel.template.loadingComplete(function(){
                                 if(panel.template.requiresResources()){
-                                    var content = {};
-                                    content.wrapped = wrappedContent;
-                                    panel.template.currentTargets().collect(function(target, key, emitTarget){ //each node
-                                        panel.template.collectResources(target, function(resource, name, emitResource){
-                                            var count = 0;
-                                            var result = '';
-                                            resource.files('js', function(files){
-                                                if(files.length) result += '<script resources="'+name+'">'+(files.join("\n"))+'</scr'+'ipt>';
-                                                count++;
-                                                if(count == 2) emitResource(result); //complete a resource
+                                    switch(options.scriptInclude || Protolus.defaultIncludeMode){
+                                        //case undefined:
+                                        case 'inline-combined':
+                                            var content = {};
+                                            content.wrapped = wrappedContent;
+                                            panel.template.currentTargets().collect(function(target, key, emitTarget){ //each node
+                                                panel.template.collectResources(target, function(resource, name, emitResource){
+                                                    var count = 0;
+                                                    var result = '';
+                                                    resource.files('js', function(files){
+                                                        if(files.length) result += '<script resources="'+name+'">'+(files.join("\n"))+'</scr'+'ipt>';
+                                                        count++;
+                                                        if(count == 2) emitResource(result); //complete a resource
+                                                    });
+                                                    resource.files('css', function(files){
+                                                        if(files.length) result += '<style resources="'+name+'">'+(files.join("\n"))+'</style>';
+                                                        count++;
+                                                        if(count == 2) emitResource(result); //complete a resource
+                                                    });
+                                                }, function(resources){ //complete a target
+                                                    emitTarget({
+                                                        name : target,
+                                                        content : resources
+                                                    });
+                                                });
+                                            }, function(targets){ //complete all targets
+                                                targets.each(function(target){
+                                                    content.wrapped = content.wrapped.replace(
+                                                        '<!--[['+target.name+']]-->', 
+                                                        function(){ return target.content.join("\n")+'<!--[['+target.name+']]-->' }
+                                                    );
+                                                });
+                                                options.onSuccess(content.wrapped);
                                             });
-                                            resource.files('css', function(files){
-                                                if(files.length) result += '<style resources="'+name+'">'+(files.join("\n"))+'</sty'+'le>';
-                                                count++;
-                                                if(count == 2) emitResource(result); //complete a resource
+                                            break;
+                                        case 'external':
+                                            //*
+                                            var minState = '';
+                                            if(false) minState = 'min/';
+                                            panel.template.currentTargets().each(function(targetName){
+                                                var resources = panel.template.orderedResourcesForTarget(targetName);
+                                                var locals = [];
+                                                resources.each(function(name){ 
+                                                    if(panel.template.directory(name) == 'App/Resources'){
+                                                        resources.erase(name);
+                                                        locals.push(name);
+                                                    }
+                                                });
+                                                resources.each(function(resource){
+                                                    wrappedContent = wrappedContent.replace(
+                                                        '<!--[['+targetName+']]-->', 
+                                                        function(){ return '<script src="/javascript/'+minState+resource+'.js"></scr'+'ipt>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                    );
+                                                    wrappedContent = wrappedContent.replace(
+                                                        '<!--[['+targetName+']]-->', 
+                                                        function(){ return '<link rel="stylesheet" type="text/css" href="/style/'+minState+resource+'.css"></link>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                    );
+                                                });
+                                                if(locals.length > 0){
+                                                    locals.each(function(resource){
+                                                        wrappedContent = wrappedContent.replace(
+                                                            '<!--[['+targetName+']]-->', 
+                                                            function(){ return '<script src="/javascript/local/'+minState+resource+'.js"></scr'+'ipt>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                        );
+                                                    });
+                                                    locals.each(function(resource){
+                                                        wrappedContent = wrappedContent.replace(
+                                                            '<!--[['+targetName+']]-->', 
+                                                            function(){ return '<link rel="stylesheet" type="text/css" href="/style/local/'+minState+resource+'.css"></link>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                        );
+                                                    });
+                                                }
                                             });
-                                        }, function(resources){ //complete a target
-                                            emitTarget({
-                                                name : target,
-                                                content : resources.join("\n")
+                                            options.onSuccess(wrappedContent);
+                                            break;
+                                        case 'external-raw':
+                                        //case undefined:
+                                            //*
+                                            var minState = '';
+                                            if(false) minState = 'min/';
+                                            panel.template.currentTargets().each(function(targetName){
+                                                var resources = panel.template.orderedResourcesForTarget(targetName);
+                                                var locals = [];
+                                                
+                                                resources.each(function(name){ 
+                                                    if(panel.template.directory(name) == 'App/Resources'){
+                                                        resources.erase(name);
+                                                        locals.push(name);
+                                                    }
+                                                });
+                                                panel.template.eachResource(targetName, function(resource, resourceName){
+                                                    resource.fileNames('js', function(names){
+                                                        names.each(function(name){
+                                                            wrappedContent = wrappedContent.replace(
+                                                                '<!--[['+targetName+']]-->', 
+                                                                function(){ return '<script src="/'+name+'"></scr'+'ipt>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                            );
+                                                        });
+                                                    });
+                                                    resource.fileNames('css', function(names){
+                                                        names.each(function(name){
+                                                            wrappedContent = wrappedContent.replace(
+                                                                '<!--[['+targetName+']]-->', 
+                                                                function(){ return '<link rel="stylesheet" type="text/css" href="/'+name+'"></link>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                            );
+                                                        });
+                                                    });
+                                                });
                                             });
-                                        });
-                                    }, function(targets){ //complete all targets
-                                        targets.each(function(target){
-                                            content.wrapped = content.wrapped.replace(
-                                                '<!--[['+target.name+']]-->', 
-                                                function(){ return target.content+'<!--[['+target.name+']]-->' }
-                                            );
-                                        });
-                                        options.onSuccess(content.wrapped);
-                                    });
+                                            options.onSuccess(wrappedContent);
+                                            break;
+                                        case 'external-combined': //*/
+                                            var minState = '';
+                                            if(false) minState = 'min/';
+                                            panel.template.currentTargets().each(function(targetName){
+                                                //var resources = panel.template.resourceNames(targetName);
+                                                var resources = panel.template.orderedResourcesForTarget(targetName);
+                                                var locals = [];
+                                                resources.each(function(name){ 
+                                                    if(panel.template.directory(name) == 'App/Resources'){
+                                                        resources.erase(name);
+                                                        locals.push(name);
+                                                    }
+                                                });
+                                                wrappedContent = wrappedContent.replace(
+                                                    '<!--[['+targetName+']]-->', 
+                                                    function(){ return '<script src="/javascript/'+minState+resources.join("-")+'"></scr'+'ipt>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                );
+                                                wrappedContent = wrappedContent.replace(
+                                                    '<!--[['+targetName+']]-->', 
+                                                    function(){ return '<style src="/style/'+minState+resources.join("-")+'"></style>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                );
+                                                if(locals.length > 0){
+                                                    wrappedContent = wrappedContent.replace(
+                                                        '<!--[['+targetName+']]-->', 
+                                                        function(){ return '<link src="/javascript/local/'+minState+locals.join("-")+'"></link>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                    );
+                                                    wrappedContent = wrappedContent.replace(
+                                                        '<!--[['+targetName+']]-->', 
+                                                        function(){ return '<link src="/style/local/'+minState+locals.join("-")+'"></link>'+"\n"+'<!--[['+targetName+']]-->' }
+                                                    );
+                                                }
+                                            });
+                                            options.onSuccess(wrappedContent);
+                                            break;
+                                    }
                                 }else{
                                     options.onSuccess(wrappedContent);
                                 }
@@ -160,7 +275,18 @@ Protolus.PageRenderer = {
         
         
     },
-    render: function(template, data, target, attrs){
+    render : function(panelName, callback, options){
+        if(!options) options = {};
+        var data = options.data || {};
+        var panel = new Protolus.Panel(panelName, {
+            onLoad :function(panel){ 
+                panel.render(data, function(result){
+                    callback(result);
+                });
+            }
+        });
+    }
+    /*render: function(template, data, target, attrs){
         Protolus.PageRenderer.time = (new Date()).getTime();
         Protolus.PageRenderer.oldPanel = Protolus.PageRenderer.panel;
         Protolus.PageRenderer.panel = template;
@@ -181,5 +307,5 @@ Protolus.PageRenderer = {
             Protolus.PageRenderer.simpleRender = renderValue;
             return result;
         }
-    }
+    }*/
 };

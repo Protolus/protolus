@@ -64,10 +64,11 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
         this.tagStack = [{}];
         var tagStack = [];
         var literalMode = false;
+        var literal = this.literalTags[0];
         var strictError = 'Strict parse error: Unmatched Tag!';
         for(var lcv = 0; lcv < xmlChars.length; lcv++){
             ch = xmlChars[lcv];
-            //console.log(['char', ch]);
+            //console.log(['char', ch, xmlChars.substring(lcv, lcv+literal.length+3)]);
             if(tagOpen){
                 if(ch == this.closer){
                     //console.log('closer');
@@ -81,12 +82,13 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
                             this.error(strictError+' ['+lastTag.name+']');
                             return;   
                         }
-                        literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
+                        //literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
                     }else{
                         //console.log('close opening tag');
                         this.open(tag);
                         tagStack.push(tag);
-                        literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
+                        literalMode = this.literalTags.contains(tag.name);
+                        if(literalMode) literal = tag.name;
                         if(
                             currentTag[currentTag.length-1] == this.closeEscape || 
                             this.unaryTags.contains(tag.name) ||
@@ -98,19 +100,25 @@ Protolus.TagParser = new Class({ //my ultra-slim tag parser
                                 this.error(strictError+' ['+lastTag.name+']');
                                 return;
                             }
-                            literalMode = this.literalTags.contains(tagStack[tagStack.length-1]);
+                            //literalMode = this.literalTags.contains(tagStack[tagStack.length-1].name);
                         }
                     }
                     tagOpen = false;
                 }else currentTag += ch;
                 //console.log('tag char');
             }else{
-                if(!literalMode && ch == this.opener){
-                    //console.log('found open');
+                if(
+                    ch == this.opener &&
+                    (
+                        !literalMode || // we aren't in literal mode, thus we could close any tag
+                        (currentTag == 'literal' && xmlChars.substring(lcv, lcv+literal.length+3) == '{/'+literal+'}') //we are in literal mode and we're closing a literal tag
+                    )
+                ){
                     currentTag = '';
                     tagOpen = true;
                     if(content.trim() != '') this.content(content.trim());
                     content = '';
+                    literalMode = false;
                 }else content += ch;
                 //console.log('ch++');
             }

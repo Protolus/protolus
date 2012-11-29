@@ -5,6 +5,6 @@
         "Protolus.ConfParser.js"
     ],
     "dependency":[
-        "protolus_init"
+        "Core"
     ]
 }

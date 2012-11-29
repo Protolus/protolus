@@ -127,6 +127,7 @@ Protolus.TemplateResourceTargeting = new Class({
     targets : {'*':{}},
     environment : {},
     fetching : 0,
+    loadDirectories : {},
     delayedForFetch : [],
     loadingComplete : function(callback){
         if(this.fetching) this.delayedForFetch.push(callback);
@@ -150,7 +151,7 @@ Protolus.TemplateResourceTargeting = new Class({
         if(!target) return Object.keys(this.targets['*']);
         else return this.targets[target];
     },
-    orderedResources : function(targets){
+    orderedResources : function(resourceNames){
         var flattenDependencies = function(resources, result){
             if(!result) result = [];
             resources.each(function(resourceName, key){
@@ -163,8 +164,11 @@ Protolus.TemplateResourceTargeting = new Class({
             }.bind(this));
             return result;
         }.bind(this);
-        var ordering = flattenDependencies(targets);
+        var ordering = flattenDependencies(resourceNames);
         return ordering;
+    },
+    orderedResourcesForTarget : function(target){
+        return this.orderedResources(this.resourceNames(target));
     },
     collectResources : function(target, fn, callback){
         var ordering = this.orderedResources(this.targets[target]);
@@ -186,8 +190,20 @@ Protolus.TemplateResourceTargeting = new Class({
         });
         return targets;
     },
+    directory : function(resourceName){
+        var result = false;
+        Object.each(this.loadDirectories, function(resources, directory){
+            resources.each(function(resource){
+                if(resource.name == resourceName){
+                    result = directory;
+                }
+            });
+        });
+        return result;
+    },
     ensureResources : function(resources, callback, directory){
         if(!directory) directory = Protolus.resourceDirectory;
+        if(!this.loadDirectories[directory]) this.loadDirectories[directory] = [];
         if(!this.resourceRoot) this.resourceRoot = this.getRoot();
         var iterations = 0;
         this.fetching++;
@@ -219,6 +235,7 @@ Protolus.TemplateResourceTargeting = new Class({
                     resolveDependencies : true,
                     directory : directory
                 });
+                this.loadDirectories[directory].push(rez);
                 this.resourceRoot.addResource(rez);
             }else iterations--;
         }.bind(this));

@@ -282,22 +282,94 @@ Protolus.WebApplication = new Class({
             console.log('connection', request);
         });
     },
+    serveResources : function(resources, type, callback, filter, directory){ //does not attempt to resolve dependencies
+        var result = {out:'/* Resource \''+resources.join(", ")+'\' as assembled by protolus */'+"\n"};
+        var count = 0;
+        var complete = function(){
+            if(filter) result.out = filter(result.out);
+            callback(result.out);
+        }
+        var opts = {mode : 'return'};
+        if(directory == 'local') opts.directory = 'App/Resources';
+        resources.each(function(resourceName){
+            count++;
+            new Protolus.Resource(resourceName, function(res){
+                if(!res){
+                    count--;
+                    if(count == 0) complete();
+                }
+                res.files(type, function(files){
+                    result.out += files.join("\n");
+                    count--;
+                    if(count == 0) complete();
+                });
+            }, opts);
+        });
+    },
     serve : function(callback){
         var finish = callback;
         //var connection
         Protolus.addEvent('web', function (request, response) {
             var connection = new Protolus.WebConnection(request, response);
             if(this.api) connection.api();
-            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('CONNECT', 'yellow')+':'+connection.id+']');
+            if(Protolus.verbose) console.log('['+AsciiArt.ansiCodes('CONNECT', 'yellow')+':'+connection.id+' : '+request.url+']');
             //var crypto = require('crypto');
             //if(extendedLogging) Logger.id = crypto.createHash('md5').update(uuid.v1()).digest("hex");
             var args = {};
             var uri = System.url.parse(request.url,true);
             var path = uri.pathname;
+            var dir = undefined;
+            if(this.options.resources && path.indexOf('/javascript/') === 0){ //serve js?
+                if(path.lastIndexOf('.') != -1) path = path.substring(0, path.lastIndexOf('.'));
+                var parts = path.split("/");
+                var resources = parts.pop().split("-");
+                var filter = function(a){return a;};
+                if(parts[2] && parts[2].toLowerCase() == 'local') dir = 'local';
+                if(
+                    (parts[2] && parts[2].toLowerCase() == 'min') || 
+                    (parts[3] && parts[3].toLowerCase() == 'min')
+                ){
+                    //todo cache based on app version
+                    filter = function(code){
+                        var jsParser = System.min.parser;
+                        var jsCompressor = System.min.uglify;
+                        var ast = jsParser.parse(code);
+                        ast = jsCompressor.ast_mangle(ast); // mangle names
+                        ast = jsCompressor.ast_squeeze(ast); // compress
+                        return jsCompressor.gen_code(ast);
+                    };
+                    
+                }
+                this.serveResources(resources, 'js', function(js){
+                    connection.respond(js);
+                }, filter, dir);
+                return;
+            }
+            if(this.options.resources && path.indexOf('/style/') === 0){ //serve css?
+                if(path.lastIndexOf('.') != -1) path = path.substring(0, path.lastIndexOf('.'));
+                var parts = path.split("/");
+                var resources = parts.pop().split("-");
+                var filter = function(a){return a;};
+                if(parts[2] && parts[2].toLowerCase() == 'local') dir = 'local';
+                if(
+                    (parts[2] && parts[2].toLowerCase() == 'min') || 
+                    (parts[3] && parts[3].toLowerCase() == 'min')
+                ){
+                    //todo cache based on app version
+                    filter = function(code){
+                        return System.css.process(code);
+                    };
+                    
+                }
+                this.serveResources(resources, 'css', function(css){
+                    connection.respond(css);
+                }, filter, dir);
+                return;
+            }
             connection.request.path = path;
             var type = path.lastIndexOf('.')!= -1? path.substring(path.lastIndexOf('.')+1): false;
             connection.request.type = type;
-            var file = '/Users/khrome/Dropbox/Code/Protolus.js'+path;
+            var file = '.'+path;
             if(type && System.file.existsSync(file)){
                 System.file.readFile(file, function(err, data){
                     connection.setHeader("Content-Type", System.mime.lookup(file));

@@ -35,6 +35,7 @@ Protolus.Application = new Class({
             this.loadConfiguration(
                 Protolus.configurationDirectory+'/'+this.environment+'.'+this.mode+'.json', 
                 function(){
+                    Protolus.defaultIncludeMode = this.getConfiguration('application.include');
                     this.enableData(callback);
                 }.bind(this)
             );
