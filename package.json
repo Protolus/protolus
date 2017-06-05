@@ -1,0 +1,21 @@
+{
+    "name": "protolus",
+    "homepage": "https://protol.us",
+    "version": "3.0.0",
+    "main": "protolus.js",
+    "description": "Agnostic MicroLibrary Framework",
+    "keywords": [],
+    "author": "Abbey Hawk Sparrow <@khrome> (http://patternweaver.com)",
+    "contributors": [],
+    "bin": {
+        "proto": "protolus.js"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "yargs": "*",
+        "ascii-art":"*"
+    },
+    "engines": {
+        "node": "*"
+    }
+}
