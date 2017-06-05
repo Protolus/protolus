@@ -1,9 +1,0 @@
-{
-    "resource" :[
-        "Protolus.Template.js",
-        "Protolus.Template.Smarty.js"
-    ],
-    "dependency":[
-        "Core", "Parsers"
-    ]
-}

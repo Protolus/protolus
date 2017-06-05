@@ -1,6 +1,0 @@
-{
-    "resource" :[
-        "Protolus.Interface.js"
-    ],
-    "dependency" : ["MooTools_Core"]
-}
